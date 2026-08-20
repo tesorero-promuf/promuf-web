@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tesorería PROMUF — Profesionales de la Música del Estado Falcón</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a1830;--bg2:#0e2244;--bg3:#12294f;
+    --tx:#f1f5f9;--tx2:#8ab0c8;--tx3:#5b7a94;
+    --bd:rgba(255,255,255,.09);
+    --teal:#3fd0c9;--teal2:#7fe3d4;--teal3:#0d5c5c;
+    --gold:#e6c468;--gold2:#d4af37;
+    --gr:#1d9e75;--ro:#e24b4a;--am:#eab308;
+    --r:12px;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(160deg,#0d1e3a 0%,var(--bg) 60%);color:var(--tx);min-height:100vh}
+  .hd{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:rgba(255,255,255,.04);border-bottom:1px solid var(--bd);flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:20;backdrop-filter:blur(10px)}
+  .hd .br{font-size:15px;font-weight:800}
+  .hd .br .pro{color:var(--teal2)}.hd .br .muf{color:var(--gold)}
+  .hd .sub{color:var(--tx2);font-size:.72rem;font-weight:400}
+  .hd-r{display:flex;align-items:center;gap:12px}
+  .st{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--tx2)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .dot-on{background:var(--gr);box-shadow:0 0 8px var(--gr)}
+  .dot-off{background:var(--ro);box-shadow:0 0 8px var(--ro)}
+  .tabs{display:flex;background:rgba(255,255,255,.03);border-bottom:1px solid var(--bd);overflow-x:auto;padding:0 12px}
+  .tab{background:none;border:none;color:var(--tx2);padding:11px 16px;font-size:.82rem;cursor:pointer;border-bottom:2px solid transparent;transition:.2s;white-space:nowrap;font-family:inherit}
+  .tab:hover{color:var(--tx)}
+  .tab.on{color:var(--teal);border-bottom-color:var(--teal);font-weight:700}
+  .tc{display:none;padding:20px;max-width:1100px;margin:0 auto}.tc.on{display:block}
+  .sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:22px}
+  .sc{background:var(--bg2);border-radius:var(--r);padding:16px;border:1px solid var(--bd)}
+  .sc .sl{color:var(--tx2);font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+  .sc .sn{font-size:1.5rem;font-weight:800;margin-top:4px}
+  .sc .sd{color:var(--tx3);font-size:.72rem;margin-top:4px}
+  .sc .bar{height:4px;background:var(--bg3);border-radius:2px;margin-top:10px;overflow:hidden}
+  .sc .bar i{display:block;height:100%;border-radius:2px}
+  .c-f1{color:var(--teal)}.c-f2{color:var(--gold)}.c-f3{color:var(--gr)}.c-f4{color:#a78bfa}
+  .b-f1{background:var(--teal)}.b-f2{background:var(--gold)}.b-f3{background:var(--gr)}.b-f4{background:#a78bfa}
+  .cs{background:var(--bg2);border-radius:var(--r);padding:18px;border:1px solid var(--bd);margin-bottom:18px}
+  .cs h3{font-size:.9rem;margin-bottom:12px;color:var(--tx)}
+  .cs h3 .tag{color:var(--tx3);font-weight:400;font-size:.72rem;margin-left:6px}
+  .tbl{width:100%;border-collapse:collapse;font-size:.78rem}
+  .tbl th{text-align:left;color:var(--tx2);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--bd);white-space:nowrap;font-size:.7rem;text-transform:uppercase;letter-spacing:.3px}
+  .tbl td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top}
+  .tbl tr:hover td{background:rgba(255,255,255,.03)}
+  .tbl .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  .tbl .pos{color:var(--gr)}.tbl .neg{color:var(--ro)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.66rem;font-weight:700}
+  .b-teal{background:rgba(63,208,201,.15);color:var(--teal)}
+  .b-gold{background:rgba(230,196,104,.15);color:var(--gold)}
+  .b-green{background:rgba(29,158,117,.15);color:var(--gr)}
+  .b-purple{background:rgba(167,139,250,.15);color:#a78bfa}
+  .b-gray{background:rgba(255,255,255,.08);color:var(--tx2)}
+  .b-red{background:rgba(226,75,74,.15);color:var(--ro)}
+  .b-blue{background:rgba(59,130,246,.15);color:#60a5fa}
+  .fb{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .fbtn{padding:6px 12px;border-radius:16px;border:1px solid var(--bd);background:var(--bg2);color:var(--tx2);cursor:pointer;font-size:.72rem;transition:.2s;font-family:inherit}
+  .fbtn:hover{border-color:var(--teal);color:var(--tx)}
+  .fbtn.on{background:var(--teal);color:#06332f;border-color:var(--teal);font-weight:700}
+  .in{width:100%;padding:9px 12px;border-radius:var(--r);border:1px solid var(--bd);background:rgba(255,255,255,.05);color:var(--tx);font-size:.8rem;outline:none;font-family:inherit}
+  .in:focus{border-color:var(--teal)}
+  .in::placeholder{color:var(--tx3)}
+  select.in option{background:var(--bg2);color:var(--tx)}
+  .fg2{margin-bottom:12px}
+  .fg2 label{display:block;font-size:.7rem;color:var(--tx2);margin-bottom:4px;font-weight:600}
+  .row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+  .btn{padding:9px 16px;border-radius:var(--r);border:none;cursor:pointer;font-size:.8rem;font-weight:700;transition:.2s;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+  .btn:active{transform:scale(.97)}
+  .bt{background:linear-gradient(135deg,var(--teal),#1aa39a);color:#06332f;box-shadow:0 4px 16px rgba(63,208,201,.25)}
+  .bt:hover{opacity:.88}
+  .bg{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#2a1f00}
+  .bg:hover{opacity:.88}
+  .bo{background:rgba(255,255,255,.07);border:1px solid var(--bd);color:#c8d8ec}
+  .bo:hover{border-color:var(--teal);color:var(--teal)}
+  .br{background:rgba(226,75,74,.15);border:1px solid rgba(226,75,74,.4);color:var(--ro)}
+  .bs{padding:4px 9px;font-size:.68rem;border-radius:8px}
+  .mi{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:7px}
+  .mi .mn{font-weight:700;font-size:.82rem}
+  .mi .md{color:var(--tx3);font-size:.7rem;margin-top:2px}
+  .mright{display:flex;align-items:center;gap:8px}
+  .mo{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);justify-content:center;align-items:center;padding:14px}
+  .mo.on{display:flex}
+  .ml2{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4);padding:20px}
+  .ml2 h2{font-size:1rem;margin-bottom:14px}
+  .mx{background:none;border:none;color:var(--tx2);font-size:1.3rem;cursor:pointer;float:right;padding:2px}
+  .mx:hover{color:var(--tx)}
+  .ta{width:100%;height:200px;padding:10px;border-radius:var(--r);border:1px solid var(--bd);background:rgba(255,255,255,.05);color:var(--gr);font-family:monospace;font-size:.72rem;resize:vertical;outline:none}
+  .note{font-size:.72rem;color:var(--tx3);line-height:1.6;margin-top:6px}
+  .ok{color:var(--gr);font-weight:700}.err{color:var(--ro);font-weight:700}
+  .tt{position:fixed;bottom:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:7px}
+  .t{padding:10px 16px;border-radius:var(--r);font-size:.78rem;font-weight:600;animation:sI .3s;box-shadow:0 4px 24px rgba(0,0,0,.3)}
+  .t-s{background:var(--gr);color:#04120d}.t-e{background:var(--ro);color:#fff}.t-i{background:var(--teal);color:#06332f}
+  @keyframes sI{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+  .ld{text-align:center;padding:30px;color:var(--tx2);font-size:.8rem}
+  .ld .spin{width:26px;height:26px;border-radius:50%;border:3px solid rgba(63,208,201,.2);border-top-color:var(--teal);animation:sp .8s linear infinite;margin:0 auto 10px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+  .stat{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:12px;text-align:center}
+  .stat .sv{font-size:1.1rem;font-weight:800}
+  .stat .sl2{font-size:.66rem;color:var(--tx2);text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
+  #pubBanner{display:none;background:rgba(167,139,250,.15);color:#c4b5fd;text-align:center;padding:8px 14px;font-size:.74rem;font-weight:600;border-bottom:1px solid var(--bd)}
+  body.pub-mode #pubBanner{display:block}
+  body.pub-mode #movFormWrap{display:none}
+  body.pub-mode .no-pub{display:none!important}
+  .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:.74rem}
+  .bar-row .bl{width:150px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-row .bw{flex:1;height:18px;background:var(--bg);border-radius:5px;overflow:hidden}
+  .bar-row .bf{height:100%;background:var(--teal);display:flex;align-items:center;padding-left:7px;font-size:.64rem;font-weight:700;min-width:26px}
+  .bar-row .bv2{width:70px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+  @media(max-width:640px){.hd{padding:10px 14px}.tab{padding:9px 11px;font-size:.75rem}.tc{padding:14px}.sg{grid-template-columns:repeat(2,1fr)}.sc .sn{font-size:1.15rem}.bl{width:100px!important}}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div>
+    <div class="br">Tesorería <span class="pro">PROM</span><span class="muf">UF</span> <span style="font-size:.65rem;color:var(--tx3)">· ASOPROMUF</span></div>
+    <div class="sub">Asociación Civil de Profesionales de la Música del Estado Falcón</div>
+  </div>
+  <div class="hd-r">
+    <div class="st"><span class="dot dot-off" id="dot"></span><span id="stxt">Sin conexión a Google Sheets</span></div>
+    <button class="btn bt" onclick="copyShareLink()">🔗 Copiar enlace</button>
+    <button class="btn bo no-pub" onclick="openConfig()">⚙ Config</button>
+  </div>
+</div>
+
+<div id="pubBanner">🔒 Modo público · solo lectura · datos de transparencia financiera de PROMUF</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab on no-pub" data-t="resumen" onclick="go('resumen')">Resumen</button>
+  <button class="tab no-pub" data-t="plan" onclick="go('plan')">Plan de Cuentas</button>
+  <button class="tab" data-t="mov" onclick="go('mov')">Movimientos</button>
+  <button class="tab" data-t="fondos" onclick="go('fondos')">Fondos</button>
+  <button class="tab" data-t="conc" onclick="go('conc')">Conciliación</button>
+  <button class="tab no-pub" data-t="audit" onclick="go('audit')">Auditoría</button>
+  <button class="tab no-pub" data-t="guia" onclick="go('guia')">Guía de importación</button>
+</div>
+
+<!-- ═══════════ RESUMEN ═══════════ -->
+<div class="tc on" id="tc-resumen">
+  <div class="sg" id="fondosCards"></div>
+  <div class="stat-grid" id="statsResumen"></div>
+  <div class="cs">
+    <h3>Ingresos vs. Gastos <span class="tag">trimestre actual</span></h3>
+    <div id="barIngresos"><div class="ld"><div class="spin"></div>Cargando datos…</div></div>
+  </div>
+  <div class="cs">
+    <h3>Últimos movimientos <span class="tag">desde Google Sheets o registro local</span></h3>
+    <div class="tbl-wrap" id="ultMov"></div>
+  </div>
+</div>
+
+<!-- ═══════════ PLAN DE CUENTAS ═══════════ -->
+<div class="tc" id="tc-plan">
+  <div class="cs">
+    <h3>Catálogo de cuentas <span class="tag" id="planCount"></span></h3>
+    <div class="fb">
+      <input class="in" id="buscarCuenta" placeholder="🔍 Buscar por código o nombre…" style="max-width:340px" oninput="renderPlan()">
+      <select class="in" id="fGrupo" style="max-width:200px" onchange="renderPlan()">
+        <option value="">Grupo: Todos</option>
+        <option>Activo</option><option>Pasivo</option><option>Patrimonio</option>
+        <option>Ingresos</option><option>Gastos</option><option>Cuentas de Orden</option>
+      </select>
+      <select class="in" id="fMoneda" style="max-width:170px" onchange="renderPlan()">
+        <option value="">Moneda: Todas</option>
+        <option>Bs</option><option>USD</option><option>USDT</option><option>Mixta</option>
+      </select>
+      <select class="in" id="fFondo" style="max-width:190px" onchange="renderPlan()">
+        <option value="">Fondo: Todos</option>
+        <option>General</option><option>Membresia</option><option>Salud</option><option>Autogestion</option><option>Operaciones</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--tx2)"><input type="checkbox" id="fDet" onchange="renderPlan()"> ver descripciones</label>
+    </div>
+    <table class="tbl" id="planTbl"></table>
+  </div>
+</div>
+
+<!-- ═══════════ MOVIMIENTOS ═══════════ -->
+<div class="tc" id="tc-mov">
+  <div class="cs" id="movFormWrap">
+    <h3>Registrar movimiento</h3>
+    <div class="row2">
+      <div class="fg2"><label>Fecha</label><input class="in" type="date" id="mFecha"></div>
+      <div class="fg2"><label>Fondo</label><select class="in" id="mFondo">
+        <option value="Membresia">F1 · Cuotas de Membresía</option>
+        <option value="Salud">F2 · Salud y Emergencias</option>
+        <option value="Autogestion">F3 · Autogestión Gremial</option>
+        <option value="Ahorro">F4 · Ahorro</option>
+        <option value="Operaciones">F5 · Operaciones</option>
+        <option value="General">General</option>
+      </select></div>
+      <div class="fg2"><label>Cuenta del plan</label><select class="in" id="mCuenta"></select></div>
+      <div class="fg2"><label>Moneda</label><select class="in" id="mMoneda"><option>Bs</option><option>USD</option><option>USDT</option></select></div>
+      <div class="fg2"><label>Tipo</label><select class="in" id="mTipo"><option value="Ingreso">Ingreso (+)</option><option value="Egreso">Egreso (−)</option></select></div>
+      <div class="fg2"><label>Monto</label><input class="in" id="mMonto" type="number" step="0.01" min="0" placeholder="0.00"></div>
+    </div>
+    <div class="row2">
+      <div class="fg2"><label>Concepto</label><input class="in" id="mConcepto" placeholder="Ej: Cuota mensual agosto 2026"></div>
+      <div class="fg2"><label>Evento / Actividad</label><input class="in" id="mEvento" placeholder="Ej: Festival Falcón 2026"></div>
+      <div class="fg2"><label>Agremiado</label><input class="in" id="mAgremiado" placeholder="Nombre o código PMF-26-0XX"></div>
+      <div class="fg2"><label>N° soporte</label><input class="in" id="mSoporte" placeholder="PM-123 / Recibo / Factura"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" class="no-pub">
+      <button class="btn bt" onclick="addMov()">＋ Guardar movimiento</button>
+      <button class="btn br" id="btnLimpiar" style="display:none" onclick="clearMov()">🗑 Limpiar local</button>
+    </div>
+    <div class="note" id="movNote"></div>
+  </div>
+  <div class="cs">
+    <h3>Movimientos <span class="tag" id="movCount"></span></h3>
+    <div class="tbl-wrap" id="movTbl"></div>
+  </div>
+</div>
+
+<!-- ═══════════ FONDOS ═══════════ -->
+<div class="tc" id="tc-fondos">
+  <div class="cs">
+    <h3>Los 4 fondos del gremio <span class="tag">Art. 5.1 Reglamento Comité de Contraloría</span></h3>
+    <table class="tbl" id="fondosTbl"></table>
+  </div>
+  <div class="cs">
+    <h3>Composición monetaria del patrimonio <span class="tag">Art. 6.e Estatutos</span></h3>
+    <div id="compMon"><div class="ld"><div class="spin"></div>Cargando…</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ CONCILIACIÓN ═══════════ -->
+<div class="tc" id="tc-conc">
+  <div class="cs">
+    <h3>Conciliación bancaria trimestral <span class="tag">Art. 15.e Estatutos — obligatoria cada trimestre</span></h3>
+    <table class="tbl" id="concTbl"></table>
+  </div>
+</div>
+
+<!-- ═══════════ AUDITORÍA ═══════════ -->
+<div class="tc" id="tc-audit">
+  <div class="cs">
+    <h3>Auditoría de integridad <span class="tag">detecta cambios en la hoja entre cargas</span></h3>
+    <div id="auditStatus"></div>
+    <div style="margin-top:12px"><button class="btn bt" onclick="resetBaseline()">✔ Establecer esta línea base</button></div>
+    <div class="note" style="margin-top:10px">El sistema guarda una "foto" de los movimientos de la hoja. Si al recargar detecta filas eliminadas o montos modificados, lo marca aquí. Así el Comité de Contraloría y la Junta Directiva pueden detectar manipulaciones. Los cambios legítimos (ej. limpiar filas de prueba) se silencian estableciendo una nueva línea base.</div>
+  </div>
+  <div class="cs"><h3>Cambios desde la última línea base</h3><div id="auditChanges"></div></div>
+</div>
+
+<!-- ═══════════ GUÍA ═══════════ -->
+<div class="tc" id="tc-guia">
+  <div class="cs">
+    <h3>Base de datos en Google Sheets — cómo importar</h3>
+    <div class="note" style="color:var(--tx2)">
+      <b style="color:var(--tx)">1. Crea la hoja</b> en <b>docs.google.com/spreadsheets</b> con tu cuenta <b>tesoreropromuf@gmail.com</b> y nómbrala <b>"Tesoreria PROMUF"</b>.<br>
+      <b>2. Crea 5 pestañas:</b> <i>PlanDeCuentas</i>, <i>Movimientos</i>, <i>Fondos</i>, <i>Socios</i> y <i>Conciliacion</i>.<br>
+      <b>3. Importa los CSV de este repositorio:</b> en cada pestaña usa <i>Archivo → Importar → Subir</i> y elige el archivo de la carpeta <code>data/</code> (movimientos_template.csv, fondos.csv, conciliacion_template.csv, socios_template.csv) y <code>plan_de_cuentas.csv</code> en su pestaña.<br>
+      <b>4. Publica la hoja:</b> <i>Archivo → Compartir → Publicar en la web</i> → selecciona cada pestaña → formato <b>CSV</b> → copia la URL de cada pestaña.<br>
+      <b>5. Pega las URLs aquí:</b> botón ⚙ Config → guarda → el dashboard se conecta (solo lectura) y verás saldos, fondos y movimientos en vivo.<br>
+      <b>6. Flujo de trabajo diario:</b> registras movimientos aquí → la API los escribe solos en la pestaña <i>Movimientos</i> de la hoja → la hoja queda como base de datos oficial y el dashboard la refleja al publicarse.
+    </div>
+    <h3 style="margin-top:18px">Reglas contables que cumple este sistema</h3>
+    <div class="note" style="color:var(--tx2)">
+      • <b>Depósito en 48 h</b> de lo recaudado (Art. 15.i Estatutos).<br>
+      • <b>Rendición de eventos</b> en máx. 15 días hábiles ante el Comité de Contraloría (Art. 10 R.CC).<br>
+      • <b>Orden de pagos:</b> 1º honorarios músicos 100%, 2º gastos con factura, 3º excedente al Fondo de Autogestión (Art. 6-A).<br>
+      • <b>Fondo de Salud:</b> ≥50% en moneda extranjera o USDT (Art. 6.d).<br>
+      • <b>Cuotas indexadas a USDT</b> (Art. 6.c).<br>
+      • <b>Tabulador</b> actualizado a tasa BCV cada 3 meses (Art. 11 R.CT).<br>
+      • <b>Auditoría trimestral</b> de los 4 fondos + balance de comprobación trimestral (Art. 15.e Estatutos / Art. 5 R.CC).
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL CONFIG ═══════════ -->
+<div class="mo" id="moConfig">
+  <div class="ml2">
+    <button class="mx" onclick="closeConfig()">✕</button>
+    <h2>Configuración — Google Sheets</h2>
+    <div class="fg2"><label>URL CSV publicada — pestaña Movimientos</label><input class="in" id="cfgMov" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?gid=0&amp;single=true&amp;output=csv"></div>
+    <div class="fg2"><label>URL CSV publicada — pestaña Fondos</label><input class="in" id="cfgFondos" placeholder="…"></div>
+    <div class="fg2"><label>URL CSV publicada — pestaña Conciliación</label><input class="in" id="cfgConc" placeholder="…"></div>
+    <div class="fg2"><label>URL API Apps Script (envío automático de movimientos)</label><input class="in" id="cfgApi" placeholder="https://script.google.com/macros/s/…/exec"></div>
+    <div class="fg2"><label>Token API (protege la hoja contra envíos no autorizados)</label><input class="in" id="cfgToken" placeholder="pf-…"></div>
+    <div class="note">Para publicar: <i>Archivo → Compartir → Publicar en la web</i>, elige la pestaña y formato CSV, copia la URL de cada pestaña. Las hojas publicadas permiten lectura sin clave (solo lectura).<br><br><b>Envío automático:</b> con la URL de la API (ver <code>scripts/agregar_movimiento.gs</code>) en <code>config.json</code>, cada movimiento guardado se escribe solo en la pestaña <i>Movimientos</i> y queda blindado 🔒.</div>
+    <div class="note" style="margin-top:8px;padding:10px;background:rgba(230,196,104,.08);border-radius:8px">📌 Las URLs del <code>config.json</code> del repositorio tienen prioridad sobre estas al abrir la versión online; este formulario se usa cuando no hay <code>config.json</code> o para probar otra hoja. El campo de la API sí se puede sobrescribir localmente. Si pegaste enlaces <code>pubhtml</code>, se convierten a CSV automáticamente.</div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn bt" onclick="saveConfig()">Guardar y conectar</button>
+      <button class="btn bo" onclick="testCfg()">Probar conexión</button>
+    </div>
+  </div>
+</div>
+
+<div class="tt" id="toasts"></div>
+
+<script>
+/* ═══════════════ CATÁLOGO DE CUENTAS (embebido desde plan_de_cuentas.csv) ═══════════════ */
+const CATALOGO = [{"codigo": "1.0.00.00", "cuenta": "ACTIVO", "grupo": "Activo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Total de recursos económicos de la asociación."}, {"codigo": "1.1.00.00", "cuenta": "ACTIVO CORRIENTE", "grupo": "Activo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Bienes y derechos realizables en menos de un año."}, {"codigo": "1.1.01.00", "cuenta": "DISPONIBILIDADES", "grupo": "Activo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Caja, bancos y valores de inmediata realización."}, {"codigo": "1.1.01.01", "cuenta": "Caja Bs", "grupo": "Activo", "moneda": "Bs", "fondo": "General", "naturaleza": "D", "descripcion": "Efectivo en bolívares físico custodiado por el Tesorero."}, {"codigo": "1.1.01.02", "cuenta": "Caja USD", "grupo": "Activo", "moneda": "USD", "fondo": "General", "naturaleza": "D", "descripcion": "Efectivo en divisas (dólares físicos) bajo custodia."}, {"codigo": "1.1.01.03", "cuenta": "Banco Bs - Cuenta Corriente ASOPROMUF", "grupo": "Activo", "moneda": "Bs", "fondo": "General", "naturaleza": "D", "descripcion": "Cuenta corriente bancaria en bolívares a nombre de la asociación."}, {"codigo": "1.1.01.04", "cuenta": "Banco USD - Cuenta Moneda Extranjera", "grupo": "Activo", "moneda": "USD", "fondo": "General", "naturaleza": "D", "descripcion": "Cuenta bancaria en moneda extranjera de la asociación."}, {"codigo": "1.1.01.05", "cuenta": "Pago Móvil (Bs)", "grupo": "Activo", "moneda": "Bs", "fondo": "General", "naturaleza": "D", "descripcion": "Recaudaciones vía pago móvil en bolívares."}, {"codigo": "1.1.01.06", "cuenta": "Zelle (USD)", "grupo": "Activo", "moneda": "USD", "fondo": "General", "naturaleza": "D", "descripcion": "Recaudaciones vía Zelle en dólares."}, {"codigo": "1.1.01.07", "cuenta": "Binance - USDT", "grupo": "Activo", "moneda": "USDT", "fondo": "General", "naturaleza": "D", "descripcion": "Billetera cripto para resguardo multimoneda (Art. 6.d)."}, {"codigo": "1.1.01.08", "cuenta": "Zinli / Tarjeta Prepagada (USD)", "grupo": "Activo", "moneda": "USD", "fondo": "General", "naturaleza": "D", "descripcion": "Billetera/tarjeta prepagada en dólares."}, {"codigo": "1.1.02.00", "cuenta": "CUENTAS POR COBRAR", "grupo": "Activo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Derechos a cobrar por concepto de cuotas, avances y anticipos."}, {"codigo": "1.1.02.01", "cuenta": "Cuotas de membresía por cobrar", "grupo": "Activo", "moneda": "USDT", "fondo": "Membresia", "naturaleza": "D", "descripcion": "Cuotas mensuales de agremiados pendientes de cobro (indexadas a USDT)."}, {"codigo": "1.1.02.02", "cuenta": "Aportes por cobrar a asociados", "grupo": "Activo", "moneda": "USDT", "fondo": "General", "naturaleza": "D", "descripcion": "Aportes extraordinarios acordados en Asamblea pendientes de cobro."}, {"codigo": "1.1.02.03", "cuenta": "Anticipos a proveedores y contratistas", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Anticipos entregados por servicios o bienes por recibir."}, {"codigo": "1.1.02.04", "cuenta": "Avances a rendir (viáticos)", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Fondos entregados para gastos que deben rendirse con soportes."}, {"codigo": "1.1.02.05", "cuenta": "Otras cuentas por cobrar", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Otros derechos a cobrar no clasificados."}, {"codigo": "1.1.03.00", "cuenta": "INVENTARIOS Y MATERIALES", "grupo": "Activo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Existencias de materiales e insumos de la asociación."}, {"codigo": "1.1.03.01", "cuenta": "Materiales e insumos musicales", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Cuerdas, accesorios e insumos de mantenimiento."}, {"codigo": "1.1.03.02", "cuenta": "Material didáctico y publicaciones", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Libros, revistas y materiales gráficos para venta o distribución."}, {"codigo": "1.1.03.03", "cuenta": "Instrumentos y equipos para la venta", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Instrumentos/equipos adquiridos para comercialización (Art. 2 Estatutos)."}, {"codigo": "1.1.04.00", "cuenta": "FONDOS CON DESTINACIÓN ESPECÍFICA", "grupo": "Activo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Los cuatro fondos del gremio (Art. 5 Reglamento Contraloría). Cada fondo es un subconjunto contable independiente."}, {"codigo": "1.1.04.01", "cuenta": "Fondo Cuotas de Membresía - Bs", "grupo": "Activo", "moneda": "Bs", "fondo": "Membresia", "naturaleza": "D", "descripcion": "Recaudaciones de cuotas en bolívares por aplicar a fines del fondo."}, {"codigo": "1.1.04.02", "cuenta": "Fondo Cuotas de Membresía - USD/USDT", "grupo": "Activo", "moneda": "USD", "fondo": "Membresia", "naturaleza": "D", "descripcion": "Recaudaciones de cuotas en divisas/crypto por aplicar a fines del fondo."}, {"codigo": "1.1.04.03", "cuenta": "Fondo de Salud y Emergencias - Bs", "grupo": "Activo", "moneda": "Bs", "fondo": "Salud", "naturaleza": "D", "descripcion": "Recursos en bolívares del Fondo de Salud y Bienestar Social."}, {"codigo": "1.1.04.04", "cuenta": "Fondo de Salud y Emergencias - USD/USDT", "grupo": "Activo", "moneda": "USD", "fondo": "Salud", "naturaleza": "D", "descripcion": "Resguardo en divisas/crypto del Fondo de Salud. Al menos 50% debe estar aquí (Art. 6.d Estatutos / Reglamento Contraloría Art. 5.2)."}, {"codigo": "1.1.04.05", "cuenta": "Fondo de Autogestión Gremial - Bs", "grupo": "Activo", "moneda": "Bs", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Excedentes de eventos propios de PROMUF en bolívares (Art. 6-A)."}, {"codigo": "1.1.04.06", "cuenta": "Fondo de Autogestión Gremial - USD/USDT", "grupo": "Activo", "moneda": "USD", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Excedentes de eventos propios en divisas/crypto."}, {"codigo": "1.1.04.07", "cuenta": "Fondo de Ahorro - Bs", "grupo": "Activo", "moneda": "Bs", "fondo": "Ahorro", "naturaleza": "D", "descripcion": "Reservas de ahorro del gremio en bolívares."}, {"codigo": "1.1.04.08", "cuenta": "Fondo de Ahorro - USD/USDT", "grupo": "Activo", "moneda": "USD", "fondo": "Ahorro", "naturaleza": "D", "descripcion": "Reservas de ahorro en divisas/crypto."}, {"codigo": "1.2.00.00", "cuenta": "ACTIVO NO CORRIENTE", "grupo": "Activo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Bienes y derechos de permanencia mayor a un año."}, {"codigo": "1.2.01.00", "cuenta": "PROPIEDAD PLANTA Y EQUIPO", "grupo": "Activo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Infraestructura y equipamiento institucional."}, {"codigo": "1.2.01.01", "cuenta": "Equipos de sonido e iluminación", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Tarimas, sistemas de sonido e iluminación de propiedad del gremio."}, {"codigo": "1.2.01.02", "cuenta": "Instrumentos musicales institucionales", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Instrumentos propiedad de la asociación."}, {"codigo": "1.2.01.03", "cuenta": "Mobiliario y equipos de oficina", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Mobiliario de la sede y oficinas."}, {"codigo": "1.2.01.04", "cuenta": "Equipos de computación", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Computadores y periféricos."}, {"codigo": "1.2.02.00", "cuenta": "(-) DEPRECIACIÓN ACUMULADA", "grupo": "Activo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Depreciación acumulada de los activos fijos (cuenta acreedora)."}, {"codigo": "1.2.02.01", "cuenta": "(-) Depreciación acumulada de equipos", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Depreciación acumulada de equipos e infraestructura."}, {"codigo": "1.2.03.00", "cuenta": "OTROS ACTIVOS NO CORRIENTES", "grupo": "Activo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Otros activos de largo plazo."}, {"codigo": "1.2.03.01", "cuenta": "Depósitos y fianzas entregadas", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Depósitos en garantía por arrendamientos o servicios."}, {"codigo": "1.2.03.02", "cuenta": "Derechos y marcas (SAPI)", "grupo": "Activo", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Registros de propiedad intelectual y marca ante el SAPI."}, {"codigo": "1.2.03.03", "cuenta": "Criptoactivos de reserva", "grupo": "Activo", "moneda": "USDT", "fondo": "Ahorro", "naturaleza": "D", "descripcion": "Reservas cripto de largo plazo del Fondo de Ahorro (Art. 6 Resguardo Patrimonial)."}, {"codigo": "2.0.00.00", "cuenta": "PASIVO", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Obligaciones de la asociación con terceros."}, {"codigo": "2.1.00.00", "cuenta": "PASIVO CORRIENTE", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Obligaciones exigibles en menos de un año."}, {"codigo": "2.1.01.00", "cuenta": "CUENTAS Y DOCUMENTOS POR PAGAR", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Deudas con proveedores, contratistas y agremiados."}, {"codigo": "2.1.01.01", "cuenta": "Proveedores por pagar", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Facturas de proveedores pendientes de pago."}, {"codigo": "2.1.01.02", "cuenta": "Honorarios de músicos por pagar", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Honorarios de músicos devengados pendientes de pago (se pagan 100% y primero)."}, {"codigo": "2.1.01.03", "cuenta": "Contratistas y staff técnico por pagar", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Staff técnico (sonido, luces, tarimas) pendiente de pago."}, {"codigo": "2.1.01.04", "cuenta": "Aportes y cuotas por devolver", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Reintegros a agremiados o terceros por pagar."}, {"codigo": "2.1.02.00", "cuenta": "OBLIGACIONES FISCALES Y LEGALES", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Obligaciones tributarias y tasas."}, {"codigo": "2.1.02.01", "cuenta": "ISLR por pagar", "grupo": "Pasivo", "moneda": "Bs", "fondo": "General", "naturaleza": "A", "descripcion": "Impuesto sobre la renta retenido o por declarar."}, {"codigo": "2.1.02.02", "cuenta": "IGTF por pagar", "grupo": "Pasivo", "moneda": "Bs", "fondo": "General", "naturaleza": "A", "descripcion": "Impuesto a las Grandes Transacciones Financieras."}, {"codigo": "2.1.02.03", "cuenta": "IVA / Retenciones por pagar", "grupo": "Pasivo", "moneda": "Bs", "fondo": "General", "naturaleza": "A", "descripcion": "Retenciones de IVA por enterar."}, {"codigo": "2.1.02.04", "cuenta": "Tasas y contribuciones por pagar", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Tasas municipales y otros tributos."}, {"codigo": "2.1.03.00", "cuenta": "OBLIGACIONES LABORALES", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Obligaciones con el personal de la asociación."}, {"codigo": "2.1.03.01", "cuenta": "Prestaciones sociales por pagar", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Prestaciones sociales acumuladas del personal."}, {"codigo": "2.1.03.02", "cuenta": "Vacaciones y utilidades por pagar", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Beneficios laborales por pagar."}, {"codigo": "2.2.00.00", "cuenta": "PASIVO NO CORRIENTE", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Obligaciones de largo plazo."}, {"codigo": "2.2.01.00", "cuenta": "PRÉSTAMOS POR PAGAR", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Préstamos a largo plazo."}, {"codigo": "2.2.01.01", "cuenta": "Préstamos bancarios por pagar", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Deuda bancaria de largo plazo."}, {"codigo": "2.2.01.02", "cuenta": "Préstamos de terceros por pagar", "grupo": "Pasivo", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Deuda con personas naturales o jurídicas."}, {"codigo": "3.0.00.00", "cuenta": "PATRIMONIO", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Patrimonio social y resultados acumulados del gremio."}, {"codigo": "3.1.00.00", "cuenta": "FONDO SOCIAL", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Aportes fundacionales y patrimonio inicial."}, {"codigo": "3.1.01.00", "cuenta": "Aporte fundacional de los miembros fundadores", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Aportes iniciales de los 7 fundadores."}, {"codigo": "3.1.02.00", "cuenta": "Donaciones patrimoniales capitalizadas", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Donaciones destinadas a capitalizarse."}, {"codigo": "3.2.00.00", "cuenta": "RESULTADOS", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Resultados acumulados y del ejercicio."}, {"codigo": "3.2.01.00", "cuenta": "Excedente (déficit) del ejercicio", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Resultado del ejercicio en curso. Sin fines de lucro: los excedentes se reinvierten en el objeto social."}, {"codigo": "3.2.02.00", "cuenta": "Excedentes acumulados de ejercicios anteriores", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Resultados de ejercicios previos pendientes de aplicación."}, {"codigo": "3.3.00.00", "cuenta": "FONDOS PATRIMONIALES RESTRINGIDOS", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Contrapartida patrimonial de los fondos con destinación específica (Art. 4 Reglamento Contraloría: destinos cerrados)."}, {"codigo": "3.3.01.00", "cuenta": "Fondo patrimonial Cuotas de Membresía", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "Membresia", "naturaleza": "A", "descripcion": "Contrapartida del Fondo de Cuotas de Membresía."}, {"codigo": "3.3.02.00", "cuenta": "Fondo patrimonial Salud y Emergencias", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "Salud", "naturaleza": "A", "descripcion": "Contrapartida del Fondo de Salud y Emergencias."}, {"codigo": "3.3.03.00", "cuenta": "Fondo patrimonial Autogestión Gremial", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Contrapartida del Fondo de Autogestión Gremial."}, {"codigo": "3.3.04.00", "cuenta": "Fondo patrimonial Ahorro", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "Ahorro", "naturaleza": "A", "descripcion": "Contrapartida del Fondo de Ahorro."}, {"codigo": "3.4.00.00", "cuenta": "RESERVAS", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Reservas constituidas por disposición estatutaria o de Asamblea."}, {"codigo": "3.4.01.00", "cuenta": "Reserva multimoneda (Fondo de Salud)", "grupo": "Patrimonio", "moneda": "USD", "fondo": "Salud", "naturaleza": "A", "descripcion": "Reserva equivalente al 50% del Fondo de Salud en moneda extranjera o USDT (Art. 6.d / Reglamento Contraloría Art. 5.2)."}, {"codigo": "3.4.02.00", "cuenta": "Reserva de contingencia", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "Operaciones", "naturaleza": "A", "descripcion": "Reserva para imprevistos operativos (Fondo de Operaciones)."}, {"codigo": "3.4.03.00", "cuenta": "Reserva de reinversión en el objeto social", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Excedentes comprometidos para reinversión (talleres, eventos, bienestar)."}, {"codigo": "4.0.00.00", "cuenta": "INGRESOS", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Recursos que incrementan el patrimonio del gremio."}, {"codigo": "4.1.00.00", "cuenta": "INGRESOS POR CUOTAS Y APORTES", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Cuotas y aportes de los agremiados (Art. 5 y 6 Estatutos)."}, {"codigo": "4.1.01.00", "cuenta": "Cuotas de membresía", "grupo": "Ingresos", "moneda": "USDT", "fondo": "Membresia", "naturaleza": "A", "descripcion": "Cuotas de los asociados indexadas al dólar USDT (Art. 6.c / Reglamento Contraloría Art. 5.3)."}, {"codigo": "4.1.01.01", "cuenta": "Cuota de inscripción (ingreso)", "grupo": "Ingresos", "moneda": "USDT", "fondo": "Membresia", "naturaleza": "A", "descripcion": "Pago único de ingreso al gremio."}, {"codigo": "4.1.01.02", "cuenta": "Cuota mensual de membresía", "grupo": "Ingresos", "moneda": "USDT", "fondo": "Membresia", "naturaleza": "A", "descripcion": "Cuota mensual de funcionamiento (Art. 19.3 Estatutos)."}, {"codigo": "4.1.01.03", "cuenta": "Cuotas extraordinarias", "grupo": "Ingresos", "moneda": "USDT", "fondo": "Membresia", "naturaleza": "A", "descripcion": "Cuotas especiales aprobadas en Asamblea."}, {"codigo": "4.1.02.00", "cuenta": "Aportes de asociados", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Aportes voluntarios o acordados de los agremiados."}, {"codigo": "4.1.03.00", "cuenta": "Reintegros y recuperaciones", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Reintegros de gastos y recuperación de fondos."}, {"codigo": "4.2.00.00", "cuenta": "INGRESOS POR ACTIVIDADES DE AUTOGESTIÓN", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Ingresos de eventos y actividades propias de PROMUF (Art. 6-A y Art. 2 Estatutos)."}, {"codigo": "4.2.01.00", "cuenta": "Eventos propios de PROMUF", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Eventos organizados o producidos por el gremio."}, {"codigo": "4.2.01.01", "cuenta": "Taquilla y entradas", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Venta de entradas a eventos propios."}, {"codigo": "4.2.01.02", "cuenta": "Patrocinios de eventos", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Patrocinios de empresas para eventos propios."}, {"codigo": "4.2.01.03", "cuenta": "Alquiler de espacios en eventos", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Venta de stands, espacios publicitarios o mesas."}, {"codigo": "4.2.01.04", "cuenta": "Servicios de producción y sonido", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Producción, sonido e iluminación a terceros."}, {"codigo": "4.2.02.00", "cuenta": "Academia PROMUF y formación", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Talleres, cursos y certificaciones formativas (Art. 2.d Estatutos)."}, {"codigo": "4.2.02.01", "cuenta": "Inscripciones a talleres y cursos", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Inscripciones a la Academia PROMUF."}, {"codigo": "4.2.02.02", "cuenta": "Certificaciones y constancias", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Emisión de certificados de formación."}, {"codigo": "4.2.03.00", "cuenta": "Avales y sellos de certificación", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Certificaciones del Comité Técnico (Sello de Calidad PROMUF)."}, {"codigo": "4.2.03.01", "cuenta": "Sello de Calidad PROMUF", "grupo": "Ingresos", "moneda": "USD", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Emisión del Sello de Calidad (Art. 6 Reglamento Comité Técnico)."}, {"codigo": "4.2.03.02", "cuenta": "Certificaciones de idoneidad", "grupo": "Ingresos", "moneda": "USD", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Evaluación y certificación de músicos, agrupaciones y staff."}, {"codigo": "4.2.03.03", "cuenta": "Avales gremiales", "grupo": "Ingresos", "moneda": "USD", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Aval institucional a agrupaciones y directorio comercial (Art. 2.c Estatutos)."}, {"codigo": "4.2.04.00", "cuenta": "Publicidad y marketing", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Publicidad en canales del gremio (Instagram, Telegram, web, eventos)."}, {"codigo": "4.2.05.00", "cuenta": "Comercialización de materiales e instrumentos", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Venta de libros, discos, materiales e instrumentos (Art. 2 Estatutos)."}, {"codigo": "4.3.00.00", "cuenta": "DONACIONES Y SUBSIDIOS", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Donaciones y subsidios recibidos (Art. 5 Estatutos)."}, {"codigo": "4.3.01.00", "cuenta": "Donaciones de personas naturales", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Donaciones de personas naturales."}, {"codigo": "4.3.02.00", "cuenta": "Donaciones de personas jurídicas", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Donaciones de empresas y organizaciones privadas."}, {"codigo": "4.3.03.00", "cuenta": "Donaciones de entes públicos", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Donaciones de alcaldías, gobernación, ministerios e instituciones públicas."}, {"codigo": "4.3.04.00", "cuenta": "Subsidios y patrocinios institucionales", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Subsidios recibidos de organismos públicos o privados."}, {"codigo": "4.3.05.00", "cuenta": "Donaciones en especie", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Donaciones de bienes o servicios valorizadas."}, {"codigo": "4.4.00.00", "cuenta": "INGRESOS FINANCIEROS", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Rendimientos y ganancias financieras."}, {"codigo": "4.4.01.00", "cuenta": "Intereses bancarios", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Intereses generados por cuentas y depósitos."}, {"codigo": "4.4.02.00", "cuenta": "Diferencias de cambio favorables", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Ganancias por variación del tipo de cambio."}, {"codigo": "4.4.03.00", "cuenta": "Ganancia por revalorización de activos multimoneda", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Revalorización de activos en divisas/crypto."}, {"codigo": "4.5.00.00", "cuenta": "OTROS INGRESOS", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Otros ingresos no operativos."}, {"codigo": "4.5.01.00", "cuenta": "Recuperación de cuentas incobrables", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Cobros de cuotas previamente incobrables."}, {"codigo": "4.5.02.00", "cuenta": "Venta de activos", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Ingresos por venta de activos fijos."}, {"codigo": "4.5.03.00", "cuenta": "Indemnizaciones y reintegros por daños", "grupo": "Ingresos", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Pagos por daños a equipos o materiales."}, {"codigo": "5.0.00.00", "cuenta": "GASTOS", "grupo": "Gastos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Recursos que reducen el patrimonio del gremio."}, {"codigo": "5.1.00.00", "cuenta": "GASTOS OPERATIVOS Y ADMINISTRATIVOS", "grupo": "Gastos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Gastos de funcionamiento ordinario de la asociación."}, {"codigo": "5.1.01.00", "cuenta": "Honorarios y sueldos administrativos", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Remuneraciones del personal y asesores de la asociación."}, {"codigo": "5.1.02.00", "cuenta": "Arrendamiento y sede", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Alquiler de la sede, local o salas de ensayo."}, {"codigo": "5.1.03.00", "cuenta": "Servicios básicos", "grupo": "Gastos", "moneda": "Bs", "fondo": "General", "naturaleza": "D", "descripcion": "Agua, luz, teléfono e internet."}, {"codigo": "5.1.04.00", "cuenta": "Materiales de oficina y papelería", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Papelería, tintas y útiles de oficina."}, {"codigo": "5.1.05.00", "cuenta": "Mantenimiento de equipos e instalaciones", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Mantenimiento de equipos, instrumentos y sede."}, {"codigo": "5.1.06.00", "cuenta": "Transporte y movilización", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Traslados y flete de equipos."}, {"codigo": "5.1.07.00", "cuenta": "Comunicaciones y plataformas digitales", "grupo": "Gastos", "moneda": "USD", "fondo": "General", "naturaleza": "D", "descripcion": "Dominios, hosting, aplicaciones, Google Workspace, bots."}, {"codigo": "5.1.08.00", "cuenta": "Gastos bancarios y comisiones", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Comisiones bancarias, IGTF y costos de plataformas de pago."}, {"codigo": "5.1.09.00", "cuenta": "Seguros", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Pólizas de seguros de la asociación."}, {"codigo": "5.1.10.00", "cuenta": "Registro, legal y notaría", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Protocolización, registro, notaría y asesoría legal."}, {"codigo": "5.2.00.00", "cuenta": "GASTOS DE EVENTOS Y AUTOGESTIÓN", "grupo": "Gastos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Gastos de eventos y actividades de autogestión (Art. 6-A)."}, {"codigo": "5.2.01.00", "cuenta": "Honorarios de músicos", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Honorarios de los músicos participantes (100%, se pagan primero)."}, {"codigo": "5.2.02.00", "cuenta": "Staff técnico", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Sonidistas, técnicos de luces, stage managers y montaje."}, {"codigo": "5.2.03.00", "cuenta": "Producción y logística", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Alquiler de tarimas, sonido, iluminación y logística."}, {"codigo": "5.2.04.00", "cuenta": "Promoción y publicidad de eventos", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Material gráfico, pauta y difusión de eventos."}, {"codigo": "5.2.05.00", "cuenta": "Viáticos y dietas", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Alimentación y alojamiento durante eventos y giras."}, {"codigo": "5.2.06.00", "cuenta": "Alquiler de espacios", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Alquiler de espacios para eventos."}, {"codigo": "5.2.07.00", "cuenta": "Otros gastos del evento", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Otros costos directos del evento con factura o recibo legalizado."}, {"codigo": "5.3.00.00", "cuenta": "GASTOS DE BIENESTAR SOCIAL", "grupo": "Gastos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Gastos del Fondo de Salud, Emergencias y Bienestar Social (Art. 2.b Estatutos)."}, {"codigo": "5.3.01.00", "cuenta": "Cobertura médica de agremiados", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Salud", "naturaleza": "D", "descripcion": "Cobertura médica inmediata de los músicos agremiados."}, {"codigo": "5.3.02.00", "cuenta": "Cobertura médica del grupo familiar", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Salud", "naturaleza": "D", "descripcion": "Cobertura médica del cónyuge, hijos y padres del agremiado."}, {"codigo": "5.3.03.00", "cuenta": "Ayudas de emergencia", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Salud", "naturaleza": "D", "descripcion": "Apoyos económicos de emergencia aprobados."}, {"codigo": "5.3.04.00", "cuenta": "Gastos funerarios", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Salud", "naturaleza": "D", "descripcion": "Apoyo en gastos funerarios de agremiados y familiares directos."}, {"codigo": "5.3.05.00", "cuenta": "Programas de bienestar social", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Conciertos benéficos, orquestas infantiles e inclusión musical (Art. 17 Estatutos)."}, {"codigo": "5.4.00.00", "cuenta": "GASTOS DE FORMACIÓN", "grupo": "Gastos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Gastos de la Academia PROMUF y capacitación (Art. 2.d Estatutos)."}, {"codigo": "5.4.01.00", "cuenta": "Honorarios de instructores", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Pago a facilitadores de talleres y cursos."}, {"codigo": "5.4.02.00", "cuenta": "Materiales didácticos", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Materiales para talleres y cursos."}, {"codigo": "5.4.03.00", "cuenta": "Certificación y trámites SAPI", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Trámites de propiedad intelectual ante el SAPI y certificaciones."}, {"codigo": "5.4.04.00", "cuenta": "Infraestructura de formación", "grupo": "Gastos", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "D", "descripcion": "Espacios y equipos para actividades formativas."}, {"codigo": "5.5.00.00", "cuenta": "GASTOS FINANCIEROS", "grupo": "Gastos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Gastos de carácter financiero."}, {"codigo": "5.5.01.00", "cuenta": "Comisiones y cargos bancarios", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Comisiones de bancos, Zelle, Binance y plataformas."}, {"codigo": "5.5.02.00", "cuenta": "Pérdidas por diferencia de cambio", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Pérdidas por variación del tipo de cambio."}, {"codigo": "5.5.03.00", "cuenta": "Intereses pagados", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Intereses por préstamos u obligaciones."}, {"codigo": "5.6.00.00", "cuenta": "OTROS GASTOS", "grupo": "Gastos", "moneda": "Mixta", "fondo": "NA", "naturaleza": "D", "descripcion": "Otros egresos no operativos."}, {"codigo": "5.6.01.00", "cuenta": "Gastos de representación", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Atender relaciones institucionales del gremio."}, {"codigo": "5.6.02.00", "cuenta": "Donaciones otorgadas", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Donaciones que realiza la asociación a otras organizaciones."}, {"codigo": "5.6.03.00", "cuenta": "Gastos extraordinarios y pérdidas", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Pérdidas, robos, daños y gastos no recurrentes."}, {"codigo": "5.6.04.00", "cuenta": "Multas y sanciones administrativas", "grupo": "Gastos", "moneda": "Mixta", "fondo": "General", "naturaleza": "D", "descripcion": "Multas de órganos públicos o administrativas."}, {"codigo": "6.0.00.00", "cuenta": "CUENTAS DE ORDEN", "grupo": "Cuentas de Orden", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Registros de control y memoria sin efecto en el patrimonio."}, {"codigo": "6.1.00.00", "cuenta": "AVALES Y SELLOS EMITIDOS", "grupo": "Cuentas de Orden", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Control de avales y sellos entregados (Comité Técnico)."}, {"codigo": "6.1.01.00", "cuenta": "Avales gremiales otorgados", "grupo": "Cuentas de Orden", "moneda": "USD", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Registro de avales otorgados a agrupaciones."}, {"codigo": "6.1.02.00", "cuenta": "Sellos de Calidad PROMUF emitidos", "grupo": "Cuentas de Orden", "moneda": "USD", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Registro de sellos de calidad emitidos."}, {"codigo": "6.1.03.00", "cuenta": "Constancias de validación de suplentes", "grupo": "Cuentas de Orden", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Registro de validaciones de suplentes emitidas (Art. 14 Reglamento Comité Técnico)."}, {"codigo": "6.2.00.00", "cuenta": "COMPROMISOS Y CONTRATOS", "grupo": "Cuentas de Orden", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Compromisos contractuales firmados por la asociación."}, {"codigo": "6.2.01.00", "cuenta": "Contratos de eventos firmados", "grupo": "Cuentas de Orden", "moneda": "Mixta", "fondo": "Autogestion", "naturaleza": "A", "descripcion": "Contratos de presentaciones y eventos."}, {"codigo": "6.2.02.00", "cuenta": "Convenios y alianzas", "grupo": "Cuentas de Orden", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Convenios con instituciones públicas o privadas."}, {"codigo": "6.3.00.00", "cuenta": "BIENES EN CUSTODIA Y COMODATO", "grupo": "Cuentas de Orden", "moneda": "Mixta", "fondo": "NA", "naturaleza": "A", "descripcion": "Bienes de terceros en poder de la asociación."}, {"codigo": "6.3.01.00", "cuenta": "Bienes recibidos en comodato", "grupo": "Cuentas de Orden", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Equipos recibidos en préstamo de uso."}, {"codigo": "6.3.02.00", "cuenta": "Documentación bajo custodia", "grupo": "Cuentas de Orden", "moneda": "Mixta", "fondo": "General", "naturaleza": "A", "descripcion": "Actas, libros y documentos resguardados por el Tesorero (Art. 15.b Estatutos)."}, {"codigo": "1.1.04.09", "cuenta": "Fondo de Operaciones - Bs", "grupo": "Activo", "moneda": "Bs", "fondo": "Operaciones", "naturaleza": "D", "descripcion": "Recursos para la operación diaria del gremio en bolívares."}, {"codigo": "1.1.04.10", "cuenta": "Fondo de Operaciones - USD/USDT", "grupo": "Activo", "moneda": "USD", "fondo": "Operaciones", "naturaleza": "D", "descripcion": "Recursos operativos en divisas/crypto."}, {"codigo": "3.3.05.00", "cuenta": "Fondo patrimonial Operaciones", "grupo": "Patrimonio", "moneda": "Mixta", "fondo": "Operaciones", "naturaleza": "A", "descripcion": "Contrapartida del Fondo de Operaciones."}];
+
+/* ═══════════════ ESTADO LOCAL ═══════════════ */
+let movs = [];
+try { movs = JSON.parse(localStorage.getItem('promuf_movs')||'[]'); } catch(e) { movs=[]; }
+let cfg = {};
+try { cfg = JSON.parse(localStorage.getItem('promuf_cfg')||'{}'); } catch(e) { cfg={}; }
+
+const FONDOS = [
+  {id:'F1', key:'Membresia',  nombre:'Fondo Cuotas de Membresía',    color:'f1', icon:'🎟',
+   base_legal:'Art. 6.c Estatutos / Art. 5.1 R.CC', resguardo:'0%', regla:'Cuotas indexadas a USDT'},
+  {id:'F2', key:'Salud',      nombre:'Fondo de Salud y Emergencias',  color:'f2', icon:'⚕',
+   base_legal:'Art. 6.d Estatutos / Art. 5.2 R.CC', resguardo:'Mínimo 50%', regla:'≥50% en USD/USDT; cobertura médica agremiados y familia directa'},
+  {id:'F3', key:'Autogestion',nombre:'Fondo de Autogestión Gremial',  color:'f3', icon:'🎤',
+   base_legal:'Art. 6-A Estatutos / Art. 6 R.CC', resguardo:'0%', regla:'Excedentes de eventos: 1º músicos 100%, 2º gastos con factura, 3º excedente al fondo'},
+  {id:'F4', key:'Ahorro',     nombre:'Fondo de Ahorro',             color:'f4', icon:'🏦',
+   base_legal:'Art. 6 Estatutos / Art. 5.1 R.CC', resguardo:'0%', regla:'Reservas de ahorro; independiente del Fondo de Operaciones'},
+  {id:'F5', key:'Operaciones',nombre:'Fondo de Operaciones',         color:'f5', icon:'⚙',
+   base_legal:'Art. 6 Estatutos / Art. 5.1 R.CC', resguardo:'0%', regla:'Recursos de operación diaria; independiente del Fondo de Ahorro'},
+];
+const CUENTAS_PARENT = ["1.0.00.00", "1.1.00.00", "1.1.01.00", "1.1.02.00", "1.1.03.00", "1.1.04.00", "1.2.00.00", "1.2.01.00", "1.2.02.00", "1.2.03.00", "2.0.00.00", "2.1.00.00", "2.1.01.00", "2.1.02.00", "2.1.03.00", "2.2.00.00", "2.2.01.00", "3.0.00.00", "3.1.00.00", "3.2.00.00", "3.3.00.00", "3.4.00.00", "4.0.00.00", "4.1.00.00", "4.1.01.00", "4.2.00.00", "4.2.01.00", "4.2.02.00", "4.2.03.00", "4.3.00.00", "4.4.00.00", "4.5.00.00", "5.0.00.00", "5.1.00.00", "5.2.00.00", "5.3.00.00", "5.4.00.00", "5.5.00.00", "5.6.00.00", "6.0.00.00", "6.1.00.00", "6.2.00.00", "6.3.00.00"];
+const NOM_FONDO = {Membresia:'F1 · Membresía', Salud:'F2 · Salud', Autogestion:'F3 · Autogestión', Ahorro:'F4 · Ahorro', Operaciones:'F5 · Operaciones', General:'General'};
+const MONEDA_SIM = {Bs:'Bs', USD:'$', USDT:'₮'};
+
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n||0).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const money = (n,m) => (MONEDA_SIM[m]||'') + ' ' + fmt(n);
+function toast(msg, tipo){ const d=document.createElement('div'); d.className='t t-'+tipo; d.textContent=msg; $('toasts').appendChild(d); setTimeout(()=>d.remove(),3500); }
+
+/* ═══════════════ NAVEGACIÓN ═══════════════ */
+function go(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on', b.dataset.t===t));
+  document.querySelectorAll('.tc').forEach(c=>c.classList.toggle('on', c.id==='tc-'+t));
+}
+function openConfig(){
+  $('cfgMov').value=cfg.mov||''; $('cfgFondos').value=cfg.fondos||''; $('cfgConc').value=cfg.conc||''; $('cfgApi').value=cfg.api||''; $('cfgToken').value=cfg.api_token||'';
+  $('moConfig').classList.add('on');
+}
+function closeConfig(){ $('moConfig').classList.remove('on'); }
+function saveConfig(){
+  cfg={
+    mov:normalizeURL($('cfgMov').value.trim()),
+    fondos:normalizeURL($('cfgFondos').value.trim()),
+    conc:normalizeURL($('cfgConc').value.trim()),
+    api:$('cfgApi').value.trim(),
+    api_token:$('cfgToken').value.trim()
+  };
+  localStorage.setItem('promuf_cfg', JSON.stringify(cfg));
+  closeConfig(); testCfg(); renderAll();
+  toast('Configuración guardada','s');
+}
+
+/* ═══════════════ MODO PÚBLICO Y COMPARTIR ═══════════════ */
+let cfgRemote = null;
+function normalizeURL(u){
+  if(!u) return u;
+  if(u.includes('/pubhtml')) u = u.replace('/pubhtml','/pub');
+  if(!u.includes('output=csv')) u += u.includes('?') ? '&output=csv' : '?output=csv';
+  return u;
+}
+async function loadConfigJson(){
+  try{
+    const r = await fetch('../../config.json');
+    if(r.ok){
+      const j = await r.json();
+      cfgRemote = {
+        mov: normalizeURL(j.mov||''),
+        fondos: normalizeURL(j.fondos||''),
+        conc: normalizeURL(j.conc||''),
+        api: (j.api||'').trim(),
+        api_token: (j.api_token||'').trim()
+      };
+      cfg = {...cfgRemote, api: (cfg.api||cfgRemote.api||''), api_token: (cfg.api_token||cfgRemote.api_token||'')};
+      localStorage.setItem('promuf_cfg', JSON.stringify(cfg));
+    }
+  }catch(e){ cfgRemote = null; }
+}
+function readQuery(){
+  try{
+    const p=new URLSearchParams(location.search);
+    if(p.get('pub')==='1'){ document.body.classList.add('pub-mode'); go('mov'); }
+    const c={};
+    if(p.get('mov')) c.mov=p.get('mov');
+    if(p.get('fondos')) c.fondos=p.get('fondos');
+    if(p.get('conc')) c.conc=p.get('conc');
+    if(Object.keys(c).length){ cfg={...cfg,...c}; localStorage.setItem('promuf_cfg',JSON.stringify(cfg)); }
+  }catch(e){}
+}
+function effCfg(){ return {...(cfgRemote||{}), ...cfg}; }
+function masterBase(){
+  const p=location.pathname.split('/');
+  const i=p.indexOf('modulos');
+  const root=i>0?p.slice(0,i).join('/'):p.slice(0,-1).join('/');
+  return location.origin+root+'/';
+}
+function currentPublicLink(){
+  return masterBase()+'?pub=1#/tesoreria';
+}
+async function copyShareLink(){
+  if(!cfgRemote||!cfgRemote.mov){ await loadConfigJson(); }
+  const base=masterBase();
+  if(cfgRemote&&cfgRemote.mov){
+    copyText(base+'?pub=1#/tesoreria');
+    toast('Enlace corto copiado — pégalo en el grupo de WhatsApp','s');
+  } else if(cfg.mov){
+    copyText(currentPublicLink());
+    toast('Enlace largo copiado. Abre la versión online ('+base+') para obtener el enlace corto','i');
+  } else {
+    toast('Primero configura las URLs publicadas en ⚙ Config','e');
+  }
+}
+function copyText(t){
+  const ok=()=>toast('Enlace copiado al portapapeles','s');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(ok,()=>{ fallbackCopy(t); });
+  } else fallbackCopy(t);
+}
+function fallbackCopy(text){
+  const ta=document.createElement('textarea'); ta.value=text;
+  ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+  ta.select(); try{ document.execCommand('copy'); toast('Enlace copiado','s'); }catch(e){ toast('Copia manual: '+text,'i'); }
+  ta.remove();
+}
+
+/* ═══════════════ CONEXIÓN GOOGLE SHEETS (publicado = solo lectura) ═══════════════ */
+async function fetchCSV(url){
+  if(!url) return null;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.text();
+}
+function parseCSV(txt){
+  const rows=[]; let cur='', row=[], q=false;
+  for(let i=0;i<txt.length;i++){
+    const c=txt[i];
+    if(q){ if(c==='"'){ if(txt[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(cur); cur=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&txt[i+1]==='\n')i++; row.push(cur); cur=''; if(row.length>1||row[0]!=='') rows.push(row); row=[]; }
+    else cur+=c;
+  }
+  if(cur!==''||row.length){ row.push(cur); rows.push(row); }
+  return rows.filter(r=>r.some(c=>c.trim()!==''));
+}
+function rowsToObj(rows){
+  if(!rows.length) return [];
+  const h=rows[0].map(x=>x.trim());
+  return rows.slice(1).map(r=>{ const o={}; h.forEach((k,i)=>o[k]=r[i]||''); return o; });
+}
+async function testCfg(){
+  try{
+    if(!cfg.mov) throw new Error('No hay URL configurada');
+    const txt = await fetchCSV(cfg.mov);
+    if(!txt) throw new Error('vacío');
+    $('dot').className='dot dot-on'; $('stxt').textContent='Conectado a Google Sheets';
+    toast('Conexión OK: se leyeron los movimientos de la hoja','s');
+  }catch(e){
+    $('dot').className='dot dot-off'; $('stxt').textContent='Sin conexión a Google Sheets';
+    toast('No se pudo conectar: '+e.message,'e');
+  }
+}
+
+/* ═══════════════ RESUMEN ═══════════════ */
+function saldosPorFondo(){
+  const s={}; FONDOS.forEach(f=>s[f.key]={total:0, porMoneda:{}});
+  s.General={total:0, porMoneda:{}};
+  const hoy=new Date(); const trimStart=new Date(hoy.getFullYear(), Math.floor(hoy.getMonth()/3)*3, 1);
+  const res={ingresos:0, gastos:0};
+  movs.forEach(m=>{
+    const v=Number(m.monto||0), t=m.tipo;
+    const sign = t==='Egreso' ? -1 : 1;
+    if(!s[m.fondo]) s[m.fondo]={total:0,porMoneda:{}};
+    s[m.fondo].total += v*sign;
+    s[m.fondo].porMoneda[m.moneda]=(s[m.fondo].porMoneda[m.moneda]||0)+v*sign;
+    s[m.fondo].total=Math.round(s[m.fondo].total*100)/100;
+    s[m.fondo].porMoneda[m.moneda]=Math.round(s[m.fondo].porMoneda[m.moneda]*100)/100;
+    if(m.fecha>=trimStart.toISOString().slice(0,10)){
+      if(t==='Ingreso') res.ingresos+=v; else res.gastos+=v;
+    }
+  });
+  return {s,res};
+}
+function renderResumen(){
+  const {s}=saldosPorFondo();
+  $('fondosCards').innerHTML = FONDOS.map(f=>{
+    const d=s[f.key]||{total:0,porMoneda:{}};
+    const pct = f.key==='Salud' ? Math.max(0,Math.min(100, (d.porMoneda.USD||0)+(d.porMoneda.USDT||0))) : null;
+    const parts=Object.entries(d.porMoneda).map(([m,v])=>v!==0?money(v,m):null).filter(Boolean);
+    return `<div class="sc">
+      <div class="sl">${f.icon} ${f.id} · ${f.nombre}</div>
+      <div class="sn c-${f.color}">${money(d.total,'USD')}</div>
+      <div class="sd">${parts.join(' · ')||'Sin movimientos'}</div>
+      <div class="bar">${pct!==null?`<i class="b-${f.color}" style="width:${pct}%"></i>`:''}</div>
+    </div>`;
+  }).join('') + `<div class="sc">
+      <div class="sl">💰 General</div>
+      <div class="sn c-f4">${money(s.General.total,'USD')}</div>
+      <div class="sd">Gastos administrativos y operativos</div>
+    </div>`;
+  const totalPat = FONDOS.reduce((a,f)=>a+((s[f.key]||{}).total||0),0);
+  const res=saldosPorFondo().res;
+  const salud=s.Salud||{porMoneda:{}};
+  const resg=Math.round(((salud.porMoneda.USD||0)+(salud.porMoneda.USDT||0)) * 100 / Math.max(0.0001, salud.total||0));
+  $('statsResumen').innerHTML = `
+    <div class="stat"><div class="sv" style="color:var(--teal)">${money(totalPat,'USD')}</div><div class="sl2">Patrimonio en fondos</div></div>
+    <div class="stat"><div class="sv" style="color:var(--gr)">${money(res.ingresos,'USD')}</div><div class="sl2">Ingresos del trimestre</div></div>
+    <div class="stat"><div class="sv" style="color:var(--ro)">${money(res.gastos,'USD')}</div><div class="sl2">Gastos del trimestre</div></div>
+    <div class="stat"><div class="sv ${resg>=50?'ok':'err'}">${resg}%</div><div class="sl2">Fondo Salud en USD/USDT (mín. 50%)</div></div>`;
+  const total=Math.max(1,res.ingresos+res.gastos);
+  $('barIngresos').innerHTML = `
+    <div class="bar-row"><div class="bl">Ingresos</div><div class="bw"><div class="bf" style="width:${Math.round(res.ingresos*100/total)}%">${money(res.ingresos,'USD')}</div></div><div class="bv2">${fmt(res.ingresos)}</div></div>
+    <div class="bar-row"><div class="bl">Gastos</div><div class="bw"><div class="bf" style="width:${Math.round(res.gastos*100/total)}%;background:var(--ro)">${money(res.gastos,'USD')}</div></div><div class="bv2">${fmt(res.gastos)}</div></div>`;
+  const ult=[...movs].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,8);
+  $('ultMov').innerHTML = ult.length ? `<table class="tbl"><tr><th>Fecha</th><th>Concepto</th><th>Fondo</th><th>Moneda</th><th class="num">Monto</th></tr>`+
+    ult.map(m=>`<tr><td>${m.fecha}</td><td>${m.concepto}</td><td><span class="badge b-gray">${NOM_FONDO[m.fondo]||m.fondo}</span></td><td>${m.moneda}</td><td class="num ${m.tipo==='Egreso'?'neg':'pos'}">${m.tipo==='Egreso'?'−':'+'} ${fmt(m.monto)}</td></tr>`).join('')+'</table>'
+    : '<div class="note" style="text-align:center;padding:14px">Aún no hay movimientos. Regístralos en la pestaña Movimientos o conecta tu hoja en ⚙ Config.</div>';
+}
+
+/* ═══════════════ PLAN DE CUENTAS ═══════════════ */
+const FONDO_BADGE = {General:'b-gray', Membresia:'b-teal', Salud:'b-gold', Autogestion:'b-green', Operaciones:'b-purple'};
+function renderPlan(){
+  const q=($('buscarCuenta').value||'').toLowerCase();
+  const g=$('fGrupo').value, m=$('fMoneda').value, f=$('fFondo').value, det=$('fDet').checked;
+  let rows=CATALOGO.filter(c=>{
+    if(g&&c.grupo!==g)return false;
+    if(m&&c.moneda!==m)return false;
+    if(f&&c.fondo!==f)return false;
+    if(q&&!(c.cuenta.toLowerCase().includes(q)||c.codigo.includes(q)))return false;
+    return true;
+  });
+  $('planCount').textContent = rows.length+' cuentas';
+  $('planTbl').innerHTML = `<tr><th>Código</th><th>Cuenta</th><th>Grupo</th><th>Moneda</th><th>Fondo</th><th>Naturaleza</th>${det?'<th>Descripción</th>':''}</tr>`+
+    rows.map(c=>`<tr>
+      <td style="font-family:monospace;font-size:.72rem">${c.codigo}</td>
+      <td><b>${c.cuenta}</b></td>
+      <td><span class="badge ${c.grupo==='Activo'?'b-teal':c.grupo==='Pasivo'?'b-red':c.grupo==='Patrimonio'?'b-purple':c.grupo==='Ingresos'?'b-green':c.grupo==='Gastos'?'b-gold':'b-gray'}">${c.grupo}</span></td>
+      <td>${c.moneda}</td>
+      <td><span class="badge ${FONDO_BADGE[c.fondo]||'b-gray'}">${c.fondo}</span></td>
+      <td>${c.naturaleza==='D'?'Deudora':'Acreedora'}</td>
+      ${det?`<td class="note" style="color:var(--tx3)">${c.descripcion||''}</td>`:''}
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--tx3)">Sin resultados</td></tr>';
+}
+
+/* ═══════════════ MOVIMIENTOS ═══════════════ */
+function fillCuentas(){
+  const sel=$('mCuenta');
+  const postable=CATALOGO.filter(c=>!CUENTAS_PARENT.includes(c.codigo));
+  sel.innerHTML = postable.map(c=>
+    `<option value="${c.codigo}" data-m="${c.moneda}">${c.codigo} · ${c.cuenta}</option>`).join('');
+  sel.onchange=()=>{
+    const m=sel.selectedOptions[0]?.dataset.m;
+    if(m&&m!=='Mixta') $('mMoneda').value=m;
+  };
+}
+function hoy(){ return new Date().toISOString().slice(0,10); }
+function addMov(){
+  const m={
+    fecha: $('mFecha').value||hoy(),
+    fondo: $('mFondo').value,
+    cuenta: $('mCuenta').value,
+    moneda: $('mMoneda').value,
+    tipo: $('mTipo').value,
+    monto: Math.abs(Number($('mMonto').value||0)),
+    concepto: $('mConcepto').value.trim(),
+    evento: $('mEvento').value.trim(),
+    agremiado: $('mAgremiado').value.trim(),
+    soporte: $('mSoporte').value.trim(),
+    id: Date.now()+''+Math.floor(Math.random()*1000),
+  };
+  if(!m.monto){ toast('Indica el monto','e'); return; }
+  if(!m.concepto){ toast('Indica el concepto','e'); return; }
+  movs.push(m); persist(); renderMov(); renderResumen(); renderFondos();
+  sendToSheet(m).then(ok=>{
+    toast(ok ? 'Movimiento guardado y ENVIADO a la hoja' : 'Movimiento guardado localmente (sin API conectada)',
+          ok ? 's' : 'i');
+  });
+  $('mMonto').value=''; $('mConcepto').value='';
+}
+async function sendToSheet(m){
+  const e=effCfg();
+  if(!e.api) return false;
+  try{
+    const c=CATALOGO.find(x=>x.codigo===m.cuenta);
+    const r=await fetch(e.api,{method:'POST',body:JSON.stringify({...m, cuenta_nombre:c?c.cuenta:'', usuario:'Tesorero', token:e.api_token||''})});
+    const j=await r.json();
+    if(j&&j.ok){ m.enviado=true; persist(); return true; }
+    return false;
+  }catch(e2){ return false; }
+}
+function persist(){ localStorage.setItem('promuf_movs', JSON.stringify(movs)); }
+function renderMov(){
+  const rows=[...movs].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  $('movCount').textContent=rows.length+' registros';
+  const drafts=movs.filter(m=>!m.enviado).length;
+  const lb=$('btnLimpiar');
+  if(lb){ lb.style.display=drafts?'':'none'; lb.textContent='🗑 Limpiar local ('+drafts+' borrador'+(drafts===1?'':'es')+')'; }
+  const apiOn=!!effCfg().api;
+  $('movNote').textContent = apiOn
+    ? 'Blindaje: los movimientos enviados a la hoja (🔒) NO se pueden eliminar desde aquí; el ✕ solo borra borradores locales no enviados. La hoja conserva historial de versiones y el Comité de Contraloría audita trimestralmente (Art. 5 R.CC).'
+    : 'Sin API conectada: estos registros son borradores locales y no se envían a la hoja. Conecta la API en ⚙ Config para que cada registro enviado quede blindado con 🔒 y no pueda borrarse.';
+  $('movTbl').innerHTML = rows.length ? `<table class="tbl"><tr><th>Fecha</th><th>Concepto</th><th>Cuenta</th><th>Fondo</th><th>Mon</th><th class="num">Monto</th>${document.body.classList.contains('pub-mode')?'':`<th>${apiOn?'Blindaje':'Estado'}</th>`}</tr>`+
+    rows.map(m=>`<tr>
+      <td>${m.fecha}</td>
+      <td>${m.concepto}${m.evento?`<div class="note" style="margin:0">🎪 ${m.evento}</div>`:''}</td>
+      <td style="font-size:.7rem">${m.cuenta}</td>
+      <td><span class="badge b-gray">${NOM_FONDO[m.fondo]||m.fondo}</span></td>
+      <td>${m.moneda}</td>
+      <td class="num ${m.tipo==='Egreso'?'neg':'pos'}">${m.tipo==='Egreso'?'−':'+'} ${fmt(m.monto)}</td>
+      ${document.body.classList.contains('pub-mode')?'':(m.enviado
+        ? '<td><span class="badge b-green" title="Ya está en la hoja; no se puede eliminar">🔒 Hoja</span></td>'
+        : `<td><button class="btn bs br" onclick="delMov('${m.id}')" title="Borrador local no enviado">✕</button></td>`)}
+    </tr>`).join('')+'</table>' : '<div class="note" style="text-align:center;padding:14px">Sin movimientos registrados.</div>';
+}
+function delMov(id){
+  const m=movs.find(x=>x.id===id);
+  if(m&&m.enviado){ toast('Este registro ya está en la hoja — no se puede eliminar','e'); return; }
+  movs=movs.filter(m=>m.id!==id); persist(); renderMov(); renderResumen();
+}
+function clearMov(){
+  const drafts=movs.filter(m=>!m.enviado);
+  if(!drafts.length){ toast('No hay borradores locales pendientes','i'); return; }
+  if(!confirm('¿Eliminar '+drafts.length+' borrador(es) local(es) no enviado(s)? Los que ya están en la hoja (🔒) se conservan.')) return;
+  movs=movs.filter(m=>m.enviado); persist(); renderMov(); renderResumen(); toast('Borradores locales eliminados','i');
+}
+/* ═══════════════ FONDOS ═══════════════ */
+function renderFondos(){
+  const {s}=saldosPorFondo();
+  $('fondosTbl').innerHTML=`<tr><th>Fondo</th><th>Base legal</th><th>Resguardo multimoneda</th><th>Regla de uso</th><th class="num">Saldo (USD)</th></tr>`+
+    FONDOS.map(f=>{
+      const d=s[f.key]||{total:0};
+      const salud=f.key==='Salud';
+      return `<tr>
+        <td><b>${f.nombre}</b><div class="note" style="margin:0">${f.id} · ${NOM_FONDO[f.key]}</div></td>
+        <td class="note">${f.base_legal}</td>
+        <td>${f.resguardo}</td>
+        <td class="note">${f.regla}</td>
+        <td class="num c-${f.color}">${money(d.total,'USD')}</td>
+      </tr>`;
+    }).join('');
+  const totales={}; movs.forEach(m=>{totales[m.moneda]=(totales[m.moneda]||0)+Number(m.monto||0)*(m.tipo==='Egreso'?-1:1);});
+  const max=Math.max(1,...Object.values(totales));
+  $('compMon').innerHTML = Object.keys(totales).length ? Object.entries(totales).map(([m,v])=>`
+    <div class="bar-row"><div class="bl">${m}</div><div class="bw"><div class="bf" style="width:${Math.abs(v)*100/max}%">${money(v,m)}</div></div><div class="bv2">${fmt(v)}</div></div>`).join('')
+    : '<div class="note" style="text-align:center;padding:14px">Sin movimientos aún.</div>';
+}
+
+/* ═══════════════ CONCILIACIÓN ═══════════════ */
+async function renderConc(){
+  let rows=[];
+  try{ const txt=await fetchCSV(effCfg().conc); if(txt) rows=rowsToObj(parseCSV(txt)); }catch(e){}
+  const cols=rows.length?Object.keys(rows[0]):['periodo','fecha_conciliacion','codigo_cuenta','cuenta','moneda','saldo_libros','saldo_banco','diferencia','conciliado','observaciones'];
+  $('concTbl').innerHTML=rows.length?`<tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>`+
+    rows.map(r=>`<tr>${cols.map(c=>`<td class="${c==='saldo_libros'||c==='saldo_banco'||c==='diferencia'?'num':''}">${r[c]}</td>`).join('')}</tr>`).join('')
+    :`<tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr><tr><td colspan="${cols.length}" style="text-align:center;color:var(--tx3);padding:20px">Sin datos. Importa data/conciliacion_template.csv a la pestaña Conciliacion de la hoja y conéctala en ⚙ Config. Debes presentar la conciliación bancaria cada trimestre (Art. 15.e Estatutos).</td></tr>`;
+}
+
+/* ═══════════════ CARGA DE SHEETS Y RENDER ═══════════════ */
+async function loadSheets(){
+  $('dot').className='dot dot-off'; $('stxt').textContent='Conectando…';
+  await loadConfigJson();
+  if(!document.body.classList.contains('pub-mode') && Object.keys(cfg).length===0 && cfgRemote && cfgRemote.mov){
+    document.body.classList.add('pub-mode'); go('mov');
+  }
+  const e=effCfg();
+  try{
+    if(e.mov){
+      const txt=await fetchCSV(e.mov);
+      if(txt){
+        const remote=rowsToObj(parseCSV(txt));
+        const remotos=remote.map(r=>({
+          id:'gs-'+r.fecha+'-'+Math.random().toString(36).slice(2,8),
+          fecha:r.fecha, fondo:r.fondo||'General', cuenta:r.codigo_cuenta||r.cuenta||'',
+          moneda:r.moneda||'USD', tipo:r.tipo_movimiento||r.tipo||'Ingreso',
+          monto:Math.abs(Number(r.monto)), concepto:r.concepto||'',
+          evento:r.evento||'', agremiado:r.agremiado||'', soporte:r.soporte||''
+        })).filter(m=>m.fecha&&m.monto);
+        const localIds=new Set(movs.map(m=>m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta));
+        const remoteSet=new Set(remotos.map(r=>r.fecha+'|'+r.concepto+'|'+r.monto+'|'+r.cuenta));
+        movs.forEach(m=>{ m.enviado=remoteSet.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta); });
+        movs=movs.concat(remotos.filter(m=>!localIds.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta)));
+        persist();
+        $('dot').className='dot dot-on'; $('stxt').textContent='Conectado a Google Sheets';
+        runAudit();
+        if(lastAudit && lastAudit.eliminados.length && !document.body.classList.contains('pub-mode')){
+          toast('⚠ Auditoría: '+lastAudit.eliminados.length+' movimiento(s) eliminado(s) o modificado(s) en la hoja','e');
+        }
+      }
+    }
+  }catch(e){ $('dot').className='dot dot-off'; $('stxt').textContent='Sin conexión (usando datos locales)'; }
+  renderAll();
+}
+function renderAll(){ renderResumen(); renderMov(); renderFondos(); renderConc(); renderAudit(); }
+
+/* ═══════════════ AUDITORÍA DE INTEGRIDAD ═══════════════ */
+let snap=null;
+try{ snap=JSON.parse(localStorage.getItem('promuf_snap')||'null'); }catch(e){ snap=null; }
+let lastAudit=null;
+function fp(m){ return [m.fecha,m.cuenta,m.fondo,m.moneda,m.monto,m.tipo,(m.concepto||'')].join('|'); }
+function baseKey(f){ const p=f.split('|'); return p[0]+'|'+p[1]+'|'+(p[6]||''); }
+function takeSnapshot(){
+  const s=saldosPorFondo().s;
+  const saldos={}; FONDOS.forEach(f=>{ saldos[f.key]=s[f.key]?s[f.key].total:0; });
+  snap={ fecha:new Date().toISOString(), movs:movs.filter(m=>m.enviado).map(fp), saldos };
+  localStorage.setItem('promuf_snap', JSON.stringify(snap));
+}
+function runAudit(){
+  lastAudit=null;
+  if(!snap||!snap.movs) return null;
+  const actual=movs.filter(m=>m.enviado).map(fp);
+  const prev=new Set(snap.movs), cur=new Set(actual);
+  const curByBase=new Map(); actual.forEach(f=>curByBase.set(baseKey(f),f));
+  const faltantes=snap.movs.filter(f=>!cur.has(f));
+  const modificados=faltantes.map(f=>({antes:f, ahora:curByBase.get(baseKey(f))})).filter(x=>x.ahora&&x.ahora!==x.antes);
+  const elimSet=new Set(modificados.map(x=>x.antes));
+  lastAudit={ fecha:snap.fecha, eliminados:faltantes.filter(f=>!elimSet.has(f)), nuevos:actual.filter(f=>!prev.has(f)), modificados };
+  return lastAudit;
+}
+function descFila(f){ const p=f.split('|'); return `${p[0]} · ${p[1]} · ${p[4]} ${p[5]} — ${p[6]}`; }
+function renderAudit(){
+  const a=runAudit();
+  const anom=a&&a.eliminados.length;
+  $('auditStatus').innerHTML = !snap
+    ? '<div class="note" style="text-align:center;padding:16px">Aún no hay línea base. Pulsa "✔ Establecer esta línea base" para activar la vigilancia.</div>'
+    : `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+         <span class="badge ${anom?'b-red':'b-green'}" style="font-size:.8rem;padding:6px 12px">${anom?'⚠ CAMBIOS DETECTADOS':'✔ SIN CAMBIOS ANÓMALOS'}</span>
+         <span class="note">Línea base: ${new Date(snap.fecha).toLocaleString('es-VE')} · ${snap.movs.length} movimientos en la hoja</span>
+       </div>`;
+  if(!a || (a.eliminados.length+a.nuevos.length+a.modificados.length)===0){
+    $('auditChanges').innerHTML='<div class="note" style="text-align:center;padding:14px">No hay cambios desde la última línea base.</div>';
+    return;
+  }
+  const mk=h=>`<h4 style="margin:12px 0 6px;font-size:.8rem;color:var(--${h})">${h==='ro'?'Eliminados de la hoja':h==='gr'?'Nuevos (agregados a la hoja)':'Montos o campos modificados'}</h4>`+
+    (h==='ro'?a.eliminados:h==='gr'?a.nuevos:a.modificados.map(x=>x.antes)).map(f=>`<div class="mi"><div><div class="mn">${descFila(f)}</div><div class="md">${h==='am'?`antes ${f.split('|')[4]} → ahora ${a.modificados.find(x=>x.antes===f).ahora.split('|')[4]}`:''}</div></div></div>`).join('');
+  $('auditChanges').innerHTML=
+    (a.modificados.length?mk('am'):'')+
+    (a.eliminados.length?mk('ro'):'')+
+    (a.nuevos.length?mk('gr'):'');
+}
+function resetBaseline(){
+  if(!confirm('¿Fijar los movimientos actuales de la hoja como línea base de auditoría? (Los cambios legítimos dejarán de marcarse)' )) return;
+  takeSnapshot(); renderAudit(); toast('Línea base de auditoría establecida','s');
+}
+
+/* init */
+readQuery();
+fillCuentas(); $('mFecha').value=hoy();
+renderPlan(); renderAll();
+loadSheets();
+</script>
+</body>
+</html>
