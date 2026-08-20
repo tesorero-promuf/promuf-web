@@ -104,6 +104,7 @@
   .stat .sl2{font-size:.66rem;color:var(--tx2);text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
   #pubBanner{display:none;background:rgba(167,139,250,.15);color:#c4b5fd;text-align:center;padding:8px 14px;font-size:.74rem;font-weight:600;border-bottom:1px solid var(--bd)}
   body.pub-mode #pubBanner{display:block}
+  body.pub-mode .hd{display:none}
   body.pub-mode #movFormWrap{display:none}
   body.pub-mode .no-pub{display:none!important}
   .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:.74rem}
@@ -117,13 +118,7 @@
 <body>
 
 <div class="hd">
-  <div>
-    <div class="br">Tesorería <span class="pro">PROM</span><span class="muf">UF</span> <span style="font-size:.65rem;color:var(--tx3)">· ASOPROMUF</span></div>
-    <div class="sub">Asociación Civil de Profesionales de la Música del Estado Falcón</div>
-  </div>
   <div class="hd-r">
-    <div class="st"><span class="dot dot-off" id="dot"></span><span id="stxt">Sin conexión a Google Sheets</span></div>
-    <button class="btn bt" onclick="copyShareLink()">🔗 Copiar enlace</button>
     <button class="btn bo no-pub" onclick="openConfig()">⚙ Config</button>
   </div>
 </div>
@@ -384,28 +379,6 @@ function readQuery(){
   }catch(e){}
 }
 function effCfg(){ return {...(cfgRemote||{}), ...cfg}; }
-function masterBase(){
-  const p=location.pathname.split('/');
-  const i=p.indexOf('modulos');
-  const root=i>0?p.slice(0,i).join('/'):p.slice(0,-1).join('/');
-  return location.origin+root+'/';
-}
-function currentPublicLink(){
-  return masterBase()+'?pub=1#/tesoreria';
-}
-async function copyShareLink(){
-  if(!cfgRemote||!cfgRemote.mov){ await loadConfigJson(); }
-  const base=masterBase();
-  if(cfgRemote&&cfgRemote.mov){
-    copyText(base+'?pub=1#/tesoreria');
-    toast('Enlace corto copiado — pégalo en el grupo de WhatsApp','s');
-  } else if(cfg.mov){
-    copyText(currentPublicLink());
-    toast('Enlace largo copiado. Abre la versión online ('+base+') para obtener el enlace corto','i');
-  } else {
-    toast('Primero configura las URLs publicadas en ⚙ Config','e');
-  }
-}
 function copyText(t){
   const ok=()=>toast('Enlace copiado al portapapeles','s');
   if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -449,10 +422,8 @@ async function testCfg(){
     if(!cfg.mov) throw new Error('No hay URL configurada');
     const txt = await fetchCSV(cfg.mov);
     if(!txt) throw new Error('vacío');
-    $('dot').className='dot dot-on'; $('stxt').textContent='Conectado a Google Sheets';
     toast('Conexión OK: se leyeron los movimientos de la hoja','s');
   }catch(e){
-    $('dot').className='dot dot-off'; $('stxt').textContent='Sin conexión a Google Sheets';
     toast('No se pudo conectar: '+e.message,'e');
   }
 }
@@ -653,7 +624,6 @@ async function renderConc(){
 
 /* ═══════════════ CARGA DE SHEETS Y RENDER ═══════════════ */
 async function loadSheets(){
-  $('dot').className='dot dot-off'; $('stxt').textContent='Conectando…';
   await loadConfigJson();
   if(!document.body.classList.contains('pub-mode') && Object.keys(cfg).length===0 && cfgRemote && cfgRemote.mov){
     document.body.classList.add('pub-mode'); go('mov');
@@ -676,14 +646,13 @@ async function loadSheets(){
         movs.forEach(m=>{ m.enviado=remoteSet.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta); });
         movs=movs.concat(remotos.filter(m=>!localIds.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta)));
         persist();
-        $('dot').className='dot dot-on'; $('stxt').textContent='Conectado a Google Sheets';
         runAudit();
         if(lastAudit && lastAudit.eliminados.length && !document.body.classList.contains('pub-mode')){
           toast('⚠ Auditoría: '+lastAudit.eliminados.length+' movimiento(s) eliminado(s) o modificado(s) en la hoja','e');
         }
       }
     }
-  }catch(e){ $('dot').className='dot dot-off'; $('stxt').textContent='Sin conexión (usando datos locales)'; }
+  }catch(e){ }
   renderAll();
 }
 function renderAll(){ renderResumen(); renderMov(); renderFondos(); renderConc(); renderAudit(); }
