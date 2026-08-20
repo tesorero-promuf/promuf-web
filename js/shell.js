@@ -83,13 +83,13 @@ function ruteo(){
 /* ── Carga de módulos en iframe (mismo origen, auto-alto) ── */
 function cargarModulo(id){
   const mod = MODULOS.find(x=>x.id===id);
-  if(!mod || !mod.ruta) return;
+  const ruta = mod && mod.ruta ? mod.ruta : 'modulos/'+id+'/index.html';
   const sp = new URLSearchParams(location.search);
   const priv = sp.get('priv') === '1';
   sp.delete('priv');
   if(!priv && sp.get('pub') !== '1') sp.set('pub', '1');
   const qs = sp.toString();
-  $('shellMain').innerHTML = `<iframe class="shell-frame" id="shellFrame" src="${mod.ruta}${qs?'?'+qs:''}" loading="eager"></iframe>`;
+  $('shellMain').innerHTML = `<iframe class="shell-frame" id="shellFrame" src="${ruta}${qs?'?'+qs:''}" loading="eager"></iframe>`;
   const ifr = $('shellFrame');
   ifr.onload = () => {
     try{
