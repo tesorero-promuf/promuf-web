@@ -54,7 +54,7 @@ Acceso: los módulos listos se abren en `#/<id>` (ej. `#/tesoreria`). El módulo
 ## Repos de origen (respaldo)
 
 - [promuf-transparencia](https://github.com/tesorero-promuf/promuf-transparencia) — dashboard original de tesorería (migrado a `modulos/tesoreria/`).
-- [carnet-digital](https://github.com/tesorero-promuf/carnet-digital) y [rifa-promuf-2026](https://github.com/tesorero-promuf/rifa-promuf-2026) — pendientes de migrar.
+- [carnet-digital](https://github.com/tesorero-promuf/carnet-digital) — pendiente de migrar.
 
 ## Seguridad
 
