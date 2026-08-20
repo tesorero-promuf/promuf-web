@@ -1,7 +1,7 @@
 {
   "modulos": [
     {"id": "inicio", "nombre": "Inicio", "icono": "🏠", "estado": "listo"},
-    {"id": "tesoreria", "nombre": "Tesorería y Transparencia", "icono": "📊", "estado": "listo", "color": "#3fd0c9", "desc": "Cuentas del gremio, fondos, movimientos y auditoría"},
+    {"id": "tesoreria", "nombre": "Tesorería y Transparencia", "icono": "📊", "estado": "listo", "ruta": "modulos/tesoreria/index.html", "color": "#3fd0c9", "desc": "Cuentas del gremio, fondos, movimientos y auditoría"},
     {"id": "carnet", "nombre": "Carnet Digital", "icono": "🪪", "estado": "proximamente", "color": "#e6c468", "desc": "Carnetización digital de los agremiados"},
     {"id": "rifa", "nombre": "Rifa 2026", "icono": "🎟️", "estado": "proximamente", "color": "#a78bfa", "desc": "Rifa anual del gremio: boletos y resultados"}
   ]
