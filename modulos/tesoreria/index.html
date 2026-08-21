@@ -295,9 +295,9 @@ const CATALOGO = [{"codigo": "1.0.00.00", "cuenta": "ACTIVO", "grupo": "Activo",
 
 /* ═══════════════ ESTADO LOCAL ═══════════════ */
 let movs = [];
-try { movs = JSON.parse(localStorage.getItem('promuf_movs')||'[]'); } catch(e) { movs=[]; }
+try { movs = JSON.parse(lsGet('promuf_movs')||'[]'); } catch(e) { movs=[]; }
 let cfg = {};
-try { cfg = JSON.parse(localStorage.getItem('promuf_cfg')||'{}'); } catch(e) { cfg={}; }
+try { cfg = JSON.parse(lsGet('promuf_cfg')||'{}'); } catch(e) { cfg={}; }
 
 const FONDOS = [
   {id:'F1', key:'Membresia',  nombre:'Fondo Cuotas de Membresía',    color:'f1', icon:'🎟',
@@ -348,13 +348,14 @@ function saveConfig(){
     api_token:$('cfgToken').value.trim(),
     gh_token:$('cfgGh').value.trim()
   };
-  localStorage.setItem('promuf_cfg', JSON.stringify(cfg));
+  lsSet('promuf_cfg', JSON.stringify(cfg));
   closeConfig(); testCfg(); renderAll();
   toast('Configuración guardada','s');
 }
 
 /* ═══════════════ MODO PÚBLICO Y COMPARTIR ═══════════════ */
 let cfgRemote = null;
+let LOAD_STATUS = '';
 function normalizeURL(u){
   if(!u) return u;
   if(u.includes('/pubhtml')) u = u.replace('/pubhtml','/pub');
@@ -366,6 +367,8 @@ function bust(u){
   if(!v) return u;
   return u + (u.includes('?') ? '&' : '?') + 'v=' + v;
 }
+function lsGet(k){ try{ return lsGet(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ lsSet(k,v); }catch(e){} }
 async function loadConfigJson(){
   try{
     const r = await fetch(bust('../../config.json'));
@@ -379,7 +382,7 @@ async function loadConfigJson(){
         api_token: (j.api_token||'').trim()
       };
       cfg = {...cfgRemote, api: (cfg.api||cfgRemote.api||''), api_token: (cfg.api_token||cfgRemote.api_token||'')};
-      localStorage.setItem('promuf_cfg', JSON.stringify(cfg));
+      lsSet('promuf_cfg', JSON.stringify(cfg));
     }
   }catch(e){ cfgRemote = null; }
 }
@@ -391,7 +394,7 @@ function readQuery(){
     if(p.get('mov')) c.mov=p.get('mov');
     if(p.get('fondos')) c.fondos=p.get('fondos');
     if(p.get('conc')) c.conc=p.get('conc');
-    if(Object.keys(c).length){ cfg={...cfg,...c}; localStorage.setItem('promuf_cfg',JSON.stringify(cfg)); }
+    if(Object.keys(c).length){ cfg={...cfg,...c}; lsSet('promuf_cfg',JSON.stringify(cfg)); }
   }catch(e){}
 }
 function effCfg(){ return {...(cfgRemote||{}), ...cfg}; }
@@ -603,7 +606,7 @@ async function dispatchSync(){
     toast('Sincronizando la web en tiempo real…','i');
   }catch(e2){}
 }
-function persist(){ localStorage.setItem('promuf_movs', JSON.stringify(movs)); }
+function persist(){ lsSet('promuf_movs', JSON.stringify(movs)); }
 function renderMov(){
   const rows=[...movs].sort((a,b)=>b.fecha.localeCompare(a.fecha));
   $('movCount').textContent=rows.length+' registros';
@@ -625,7 +628,7 @@ function renderMov(){
       ${document.body.classList.contains('pub-mode')?'':(m.enviado
         ? '<td><span class="badge b-green" title="Ya está en la hoja; no se puede eliminar">🔒 Hoja</span></td>'
         : `<td><button class="btn bs br" onclick="delMov('${m.id}')" title="Borrador local no enviado">✕</button></td>`)}
-    </tr>`).join('')+'</table>' : '<div class="note" style="text-align:center;padding:14px">Sin movimientos registrados.</div>';
+    </tr>`).join('')+'</table>'     : '<div class="note" style="text-align:center;padding:14px">Sin movimientos registrados.<div style="font-size:.7rem;opacity:.7;margin-top:6px">debug: '+LOAD_STATUS+'</div></div>';
 }
 function delMov(id){
   const m=movs.find(x=>x.id===id);
@@ -681,6 +684,7 @@ async function renderConc(){
 /* ═══════════════ CARGA DE SHEETS Y RENDER ═══════════════ */
 async function loadSheets(){
   await loadConfigJson();
+  LOAD_STATUS = 'cfg.mov='+(effCfg().mov||'(vacío)');
   if(!document.body.classList.contains('pub-mode') && Object.keys(cfg).length===0 && cfgRemote && cfgRemote.mov){
     document.body.classList.add('pub-mode'); go('mov');
   }
@@ -697,6 +701,7 @@ async function loadSheets(){
           monto:Math.abs(Number(r.monto)), concepto:r.concepto||'',
           evento:r.evento||'', agremiado:r.agremiado||'', soporte:r.soporte||''
         })).filter(m=>m.fecha&&m.monto);
+        LOAD_STATUS += ' | remotos='+remotos.length;
         const localIds=new Set(movs.map(m=>m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta));
         const remoteSet=new Set(remotos.map(r=>r.fecha+'|'+r.concepto+'|'+r.monto+'|'+r.cuenta));
         movs.forEach(m=>{ m.enviado=remoteSet.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta); });
@@ -706,9 +711,13 @@ async function loadSheets(){
         if(lastAudit && lastAudit.eliminados.length && !document.body.classList.contains('pub-mode')){
           toast('⚠ Auditoría: '+lastAudit.eliminados.length+' movimiento(s) eliminado(s) o modificado(s) en la hoja','e');
         }
+      } else {
+        LOAD_STATUS += ' | CSV vacío';
       }
+    } else {
+      LOAD_STATUS += ' | sin e.mov';
     }
-  }catch(e){ }
+  }catch(e){ LOAD_STATUS += ' | ERROR: '+e.message; }
   renderAll();
   if(effCfg().api){
     movs.filter(m=>!m.enviado).forEach(m=> sendToSheet(m).then(ok=>{ if(ok){ persist(); renderMov(); renderResumen(); renderFondos(); } }));
@@ -718,7 +727,7 @@ function renderAll(){ renderResumen(); renderMov(); renderFondos(); renderConc()
 
 /* ═══════════════ AUDITORÍA DE INTEGRIDAD ═══════════════ */
 let snap=null;
-try{ snap=JSON.parse(localStorage.getItem('promuf_snap')||'null'); }catch(e){ snap=null; }
+try{ snap=JSON.parse(lsGet('promuf_snap')||'null'); }catch(e){ snap=null; }
 let lastAudit=null;
 function fp(m){ return [m.fecha,m.cuenta,m.fondo,m.moneda,m.monto,m.tipo,(m.concepto||'')].join('|'); }
 function baseKey(f){ const p=f.split('|'); return p[0]+'|'+p[1]+'|'+(p[6]||''); }
@@ -726,7 +735,7 @@ function takeSnapshot(){
   const s=saldosPorFondo().s;
   const saldos={}; FONDOS.forEach(f=>{ saldos[f.key]=s[f.key]?s[f.key].total:0; });
   snap={ fecha:new Date().toISOString(), movs:movs.filter(m=>m.enviado).map(fp), saldos };
-  localStorage.setItem('promuf_snap', JSON.stringify(snap));
+  lsSet('promuf_snap', JSON.stringify(snap));
 }
 function runAudit(){
   lastAudit=null;
