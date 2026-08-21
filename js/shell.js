@@ -8,6 +8,7 @@
 const $ = id => document.getElementById(id);
 let MODULOS = [];
 let CFG = {};
+const APP_VER = 'r18';
 
 const AVISO_TIPOS = {
   aviso:      { ico: '📢', clase: 'b-teal' },
@@ -89,7 +90,8 @@ function cargarModulo(id){
   sp.delete('priv');
   if(!priv && sp.get('pub') !== '1') sp.set('pub', '1');
   const qs = sp.toString();
-  $('shellMain').innerHTML = `<iframe class="shell-frame" id="shellFrame" src="${ruta}${qs?'?'+qs:''}" loading="eager"></iframe>`;
+  const sep = qs ? '&' : '?';
+  $('shellMain').innerHTML = `<iframe class="shell-frame" id="shellFrame" src="${ruta}?${qs}${sep}v=${APP_VER}" loading="eager"></iframe>`;
   const ifr = $('shellFrame');
   ifr.onload = () => {
     try{

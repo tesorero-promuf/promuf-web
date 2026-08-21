@@ -361,9 +361,14 @@ function normalizeURL(u){
   if(!u.includes('output=csv')) u += u.includes('?') ? '&output=csv' : '?output=csv';
   return u;
 }
+function bust(u){
+  const v = new URLSearchParams(location.search).get('v');
+  if(!v) return u;
+  return u + (u.includes('?') ? '&' : '?') + 'v=' + v;
+}
 async function loadConfigJson(){
   try{
-    const r = await fetch('../../config.json');
+    const r = await fetch(bust('../../config.json'));
     if(r.ok){
       const j = await r.json();
       cfgRemote = {
@@ -666,7 +671,7 @@ function renderFondos(){
 /* ═══════════════ CONCILIACIÓN ═══════════════ */
 async function renderConc(){
   let rows=[];
-  try{ const txt=await fetchCSV(effCfg().conc); if(txt) rows=rowsToObj(parseCSV(txt)); }catch(e){}
+  try{ const txt=await fetchCSV(bust(effCfg().conc)); if(txt) rows=rowsToObj(parseCSV(txt)); }catch(e){}
   const cols=rows.length?Object.keys(rows[0]):['periodo','fecha_conciliacion','codigo_cuenta','cuenta','moneda','saldo_libros','saldo_banco','diferencia','conciliado','observaciones'];
   $('concTbl').innerHTML=rows.length?`<tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>`+
     rows.map(r=>`<tr>${cols.map(c=>`<td class="${c==='saldo_libros'||c==='saldo_banco'||c==='diferencia'?'num':''}">${r[c]}</td>`).join('')}</tr>`).join('')
@@ -682,7 +687,7 @@ async function loadSheets(){
   const e=effCfg();
   try{
     if(e.mov){
-      const txt=await fetchCSV(e.mov);
+      const txt=await fetchCSV(bust(e.mov));
       if(txt){
         const remote=rowsToObj(repararFormatosVE(parseCSV(txt)));
         const remotos=remote.map(r=>({
