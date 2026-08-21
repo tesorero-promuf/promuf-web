@@ -191,7 +191,7 @@
       <div class="fg2"><label>Cuenta del plan</label><select class="in" id="mCuenta"></select></div>
       <div class="fg2"><label>Moneda</label><select class="in" id="mMoneda"><option>Bs</option><option>USD</option><option>USDT</option></select></div>
       <div class="fg2"><label>Tipo</label><select class="in" id="mTipo"><option value="Ingreso">Ingreso (+)</option><option value="Egreso">Egreso (−)</option></select></div>
-      <div class="fg2"><label>Monto</label><input class="in" id="mMonto" type="number" step="0.01" min="0" placeholder="0.00"></div>
+      <div class="fg2"><label>Monto</label><input class="in" id="mMonto" type="text" step="0.01" min="0" placeholder="0.00" oninput="normalizaMonto(this)"></div>
     </div>
     <div class="row2">
       <div class="fg2"><label>Concepto</label><input class="in" id="mConcepto" placeholder="Ej: Cuota mensual agosto 2026"></div>
@@ -316,6 +316,15 @@ const MONEDA_SIM = {Bs:'Bs', USD:'$', USDT:'₮'};
 
 const $ = id => document.getElementById(id);
 const fmt = n => Number(n||0).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const normalizaMonto = n => {
+  if(!n||!n.value) return '';
+  const s = n.value.trim();
+  if(!s) return '';
+  if(s.includes(',')){
+    return s.replace(/\./g,'').replace(',','.');
+  }
+  return s;
+};
 const money = (n,m) => (MONEDA_SIM[m]||'') + ' ' + fmt(n);
 function toast(msg, tipo){ const d=document.createElement('div'); d.className='t t-'+tipo; d.textContent=msg; $('toasts').appendChild(d); setTimeout(()=>d.remove(),3500); }
 
@@ -412,12 +421,32 @@ function parseCSV(txt){
   if(cur!==''||row.length){ row.push(cur); rows.push(row); }
   return rows.filter(r=>r.some(c=>c.trim()!==''));
 }
-function rowsToObj(rows){
-  if(!rows.length) return [];
-  const h=rows[0].map(x=>x.trim());
-  return rows.slice(1).map(r=>{ const o={}; h.forEach((k,i)=>o[k]=r[i]||''); return o; });
+// Post-procesado: arregla números en formato VE (punto miles, coma decimal)
+// que parseCSV pudo haber dividido erroneamente en columnas separadas.
+function repararFormatosVE(rows){
+  if(!rows.length) return rows;
+  // La hoja "Movimientos" tiene 11 columnas esperadas
+  const COLUMNA_MONTO = 5;
+  const colEsperadas = 11;
+  return rows.map((row, idx)=> idx===0? row : (function(){
+    // Si la fila tiene más elementos que las 11 columnas esperadas,
+    // el elemento de más es probablemente la parte decimal de un número VE
+    if(row.length > colEsperadas){
+      // Revisar si el campo del monto (índice 5) y el de más parecen un VE dividido
+      const montoParte1 = row[COLUMNA_MONTO] || '';
+      const montoParte2 = row[COLUMNA_MONTO + 1] || '';
+      if(montoParte1 && montoParte2 && montoParte1.includes('.') && /^\d+$/.test(montoParte2)){
+        // Elimina el punto de miles y junta con la parte decimal
+        const reparado = montoParte1.replace(/\./g,'') + '.' + montoParte2;
+        const nuevoRow = [...row];
+        nuevoRow[COLUMNA_MONTO] = reparado;
+        nuevoRow.splice(COLUMNA_MONTO + 1, 1);
+        return nuevoRow;
+      }
+    }
+    return row;
+  })());
 }
-async function testCfg(){
   try{
     if(!cfg.mov) throw new Error('No hay URL configurada');
     const txt = await fetchCSV(cfg.mov);
@@ -593,16 +622,19 @@ function clearMov(){
 /* ═══════════════ FONDOS ═══════════════ */
 function renderFondos(){
   const {s}=saldosPorFondo();
-  $('fondosTbl').innerHTML=`<tr><th>Fondo</th><th>Base legal</th><th>Resguardo multimoneda</th><th>Regla de uso</th><th class="num">Saldo (USD)</th></tr>`+
+  $('fondosTbl').innerHTML=`<tr><th>Fondo</th><th>Base legal</th><th>Resguardo multimoneda</th><th>Regla de uso</th><th class="num">Saldo (USD)</th><th class="num">Saldo (Bs)</th></tr>`+
     FONDOS.map(f=>{
-      const d=s[f.key]||{total:0};
+      const d=s[f.key]||{total:0, porMoneda:{}};
       const salud=f.key==='Salud';
+      const usd = d.porMoneda.USD || 0;
+      const bs = d.porMoneda.Bs || 0;
       return `<tr>
         <td><b>${f.nombre}</b><div class="note" style="margin:0">${f.id} · ${NOM_FONDO[f.key]}</div></td>
         <td class="note">${f.base_legal}</td>
         <td>${f.resguardo}</td>
         <td class="note">${f.regla}</td>
-        <td class="num c-${f.color}">${money(d.total,'USD')}</td>
+        <td class="num c-${f.color}">${money(usd,'USD')}</td>
+        <td class="num c-${f.color}">${money(bs,'Bs')}</td>
       </tr>`;
     }).join('');
   const totales={}; movs.forEach(m=>{totales[m.moneda]=(totales[m.moneda]||0)+Number(m.monto||0)*(m.tipo==='Egreso'?-1:1);});
@@ -633,7 +665,7 @@ async function loadSheets(){
     if(e.mov){
       const txt=await fetchCSV(e.mov);
       if(txt){
-        const remote=rowsToObj(parseCSV(txt));
+        const remote=rowsToObj(repararFormatosVE(parseCSV(txt)));
         const remotos=remote.map(r=>({
           id:'gs-'+r.fecha+'-'+Math.random().toString(36).slice(2,8),
           fecha:r.fecha, fondo:r.fondo||'General', cuenta:r.codigo_cuenta||r.cuenta||'',
