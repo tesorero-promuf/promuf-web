@@ -457,6 +457,11 @@ function repararFormatosVE(rows){
     return row;
   })());
 }
+function rowsToObj(rows){
+  if(!rows.length) return [];
+  const head = rows[0].map(h=>h.trim());
+  return rows.slice(1).map(r=>{ const o={}; head.forEach((h,i)=>{ o[h]=r[i]; }); return o; });
+}
 
 
 /* ═══════════════ RESUMEN ═══════════════ */
