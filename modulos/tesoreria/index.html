@@ -447,15 +447,7 @@ function repararFormatosVE(rows){
     return row;
   })());
 }
-  try{
-    if(!cfg.mov) throw new Error('No hay URL configurada');
-    const txt = await fetchCSV(cfg.mov);
-    if(!txt) throw new Error('vacío');
-    toast('Conexión OK: se leyeron los movimientos de la hoja','s');
-  }catch(e){
-    toast('No se pudo conectar: '+e.message,'e');
-  }
-}
+
 
 /* ═══════════════ RESUMEN ═══════════════ */
 function saldosPorFondo(){
