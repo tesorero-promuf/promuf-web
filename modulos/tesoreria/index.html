@@ -277,6 +277,7 @@
     <div class="fg2"><label>URL CSV publicada — pestaña Conciliación</label><input class="in" id="cfgConc" placeholder="…"></div>
     <div class="fg2"><label>URL API Apps Script (envío automático de movimientos)</label><input class="in" id="cfgApi" placeholder="https://script.google.com/macros/s/…/exec"></div>
     <div class="fg2"><label>Token API (protege la hoja contra envíos no autorizados)</label><input class="in" id="cfgToken" placeholder="pf-…"></div>
+    <div class="fg2"><label>Token de GitHub (sincronización en tiempo real de la web)</label><input class="in" id="cfgGh" placeholder="github_pat_…" type="password"></div>
     <div class="note">Para publicar: <i>Archivo → Compartir → Publicar en la web</i>, elige la pestaña y formato CSV, copia la URL de cada pestaña. Las hojas publicadas permiten lectura sin clave (solo lectura).<br><br><b>Envío automático:</b> con la URL de la API (ver <code>scripts/agregar_movimiento.gs</code>) en <code>config.json</code>, cada movimiento guardado se escribe solo en la pestaña <i>Movimientos</i> y queda blindado 🔒.</div>
     <div class="note" style="margin-top:8px;padding:10px;background:rgba(230,196,104,.08);border-radius:8px">📌 Las URLs del <code>config.json</code> del repositorio tienen prioridad sobre estas al abrir la versión online; este formulario se usa cuando no hay <code>config.json</code> o para probar otra hoja. El campo de la API sí se puede sobrescribir localmente. Si pegaste enlaces <code>pubhtml</code>, se convierten a CSV automáticamente.</div>
     <div style="display:flex;gap:8px;margin-top:14px">
@@ -334,7 +335,7 @@ function go(t){
   document.querySelectorAll('.tc').forEach(c=>c.classList.toggle('on', c.id==='tc-'+t));
 }
 function openConfig(){
-  $('cfgMov').value=cfg.mov||''; $('cfgFondos').value=cfg.fondos||''; $('cfgConc').value=cfg.conc||''; $('cfgApi').value=cfg.api||''; $('cfgToken').value=cfg.api_token||'';
+  $('cfgMov').value=cfg.mov||''; $('cfgFondos').value=cfg.fondos||''; $('cfgConc').value=cfg.conc||''; $('cfgApi').value=cfg.api||''; $('cfgToken').value=cfg.api_token||''; $('cfgGh').value=cfg.gh_token||'';
   $('moConfig').classList.add('on');
 }
 function closeConfig(){ $('moConfig').classList.remove('on'); }
@@ -344,7 +345,8 @@ function saveConfig(){
     fondos:normalizeURL($('cfgFondos').value.trim()),
     conc:normalizeURL($('cfgConc').value.trim()),
     api:$('cfgApi').value.trim(),
-    api_token:$('cfgToken').value.trim()
+    api_token:$('cfgToken').value.trim(),
+    gh_token:$('cfgGh').value.trim()
   };
   localStorage.setItem('promuf_cfg', JSON.stringify(cfg));
   closeConfig(); testCfg(); renderAll();
@@ -580,9 +582,21 @@ async function sendToSheet(m){
     const c=CATALOGO.find(x=>x.codigo===m.cuenta);
     const r=await fetch(e.api,{method:'POST',body:JSON.stringify({...m, cuenta_nombre:c?c.cuenta:'', usuario:'Tesorero', token:e.api_token||''})});
     const j=await r.json();
-    if(j&&j.ok){ m.enviado=true; persist(); return true; }
+    if(j&&j.ok){ m.enviado=true; persist(); dispatchSync(); return true; }
     return false;
   }catch(e2){ return false; }
+}
+async function dispatchSync(){
+  const t=effCfg().gh_token;
+  if(!t) return;
+  try{
+    await fetch('https://api.github.com/repos/tesorero-promuf/promuf-web/actions/workflows/sync-data.yml/dispatches',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+      body:JSON.stringify({ref:'main'})
+    });
+    toast('Sincronizando la web en tiempo real…','i');
+  }catch(e2){}
 }
 function persist(){ localStorage.setItem('promuf_movs', JSON.stringify(movs)); }
 function renderMov(){
