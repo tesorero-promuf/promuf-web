@@ -462,6 +462,12 @@ function rowsToObj(rows){
   const head = rows[0].map(h=>h.trim());
   return rows.slice(1).map(r=>{ const o={}; head.forEach((h,i)=>{ o[h]=r[i]; }); return o; });
 }
+// Numero en formato VE: punto miles, coma decimal ("32,19" -> 32.19; "1.234,56" -> 1234.56)
+function numVE(s){
+  if(s==null) return 0;
+  const n=Number((''+s).trim().replace(/\./g,'').replace(',','.'));
+  return isNaN(n)?0:n;
+}
 
 
 /* ═══════════════ RESUMEN ═══════════════ */
@@ -572,7 +578,7 @@ function addMov(){
     cuenta: $('mCuenta').value,
     moneda: $('mMoneda').value,
     tipo: $('mTipo').value,
-    monto: Math.abs(Number($('mMonto').value||0)),
+    monto: Math.abs(numVE($('mMonto').value||0)),
     concepto: $('mConcepto').value.trim(),
     evento: $('mEvento').value.trim(),
     agremiado: $('mAgremiado').value.trim(),
@@ -650,8 +656,8 @@ function clearMov(){
 function renderFondos(){
   const {s}=saldosPorFondo();
   const ORDEN_MON=['USD','USDT','Bs'];
-  const monedas=new Set();
-  FONDOS.forEach(f=>{ const d=s[f.key]; if(d) Object.keys(d.porMoneda).forEach(m=>{ if((d.porMoneda[m]||0)!==0) monedas.add(m); }); });
+  const monedas=new Set(['USD','Bs']);
+  FONDOS.forEach(f=>{ const d=s[f.key]; if(d) Object.keys(d.porMoneda).forEach(m=>{ monedas.add(m); }); });
   const cols=[...monedas].sort((a,b)=>{ const ia=ORDEN_MON.indexOf(a), ib=ORDEN_MON.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib) || a.localeCompare(b); });
   const headCols = cols.length ? cols.map(c=>`<th class="num">Saldo (${c})</th>`).join('') : `<th class="num">Saldo (USD)</th>`;
   $('fondosTbl').innerHTML=`<tr><th>Fondo</th><th>Base legal</th><th>Resguardo multimoneda</th><th>Regla de uso</th>${headCols}</tr>`+
@@ -703,7 +709,7 @@ async function loadSheets(){
           id:'gs-'+r.fecha+'-'+Math.random().toString(36).slice(2,8),
           fecha:r.fecha, fondo:r.fondo||'General', cuenta:r.codigo_cuenta||r.cuenta||'',
           moneda:r.moneda||'USD', tipo:r.tipo_movimiento||r.tipo||'Ingreso',
-          monto:Math.abs(Number(r.monto)), concepto:r.concepto||'',
+          monto:Math.abs(numVE(r.monto)), concepto:r.concepto||'',
           evento:r.evento||'', agremiado:r.agremiado||'', soporte:r.soporte||''
         })).filter(m=>m.fecha&&m.monto);
         LOAD_STATUS += ' | remotos='+remotos.length;
