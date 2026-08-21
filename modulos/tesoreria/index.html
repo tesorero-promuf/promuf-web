@@ -614,19 +614,24 @@ function clearMov(){
 /* ═══════════════ FONDOS ═══════════════ */
 function renderFondos(){
   const {s}=saldosPorFondo();
-  $('fondosTbl').innerHTML=`<tr><th>Fondo</th><th>Base legal</th><th>Resguardo multimoneda</th><th>Regla de uso</th><th class="num">Saldo (USD)</th><th class="num">Saldo (Bs)</th></tr>`+
+  const ORDEN_MON=['USD','USDT','Bs'];
+  const monedas=new Set();
+  FONDOS.forEach(f=>{ const d=s[f.key]; if(d) Object.keys(d.porMoneda).forEach(m=>{ if((d.porMoneda[m]||0)!==0) monedas.add(m); }); });
+  const cols=[...monedas].sort((a,b)=>{ const ia=ORDEN_MON.indexOf(a), ib=ORDEN_MON.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib) || a.localeCompare(b); });
+  const headCols = cols.length ? cols.map(c=>`<th class="num">Saldo (${c})</th>`).join('') : `<th class="num">Saldo (USD)</th>`;
+  $('fondosTbl').innerHTML=`<tr><th>Fondo</th><th>Base legal</th><th>Resguardo multimoneda</th><th>Regla de uso</th>${headCols}</tr>`+
     FONDOS.map(f=>{
       const d=s[f.key]||{total:0, porMoneda:{}};
-      const salud=f.key==='Salud';
-      const usd = d.porMoneda.USD || 0;
-      const bs = d.porMoneda.Bs || 0;
+      const cells = cols.length ? cols.map(c=>{
+        const v=d.porMoneda[c]||0;
+        return `<td class="num c-${f.color}">${v?money(v,c):'—'}</td>`;
+      }).join('') : `<td class="num c-${f.color}">${money(0,'USD')}</td>`;
       return `<tr>
         <td><b>${f.nombre}</b><div class="note" style="margin:0">${f.id} · ${NOM_FONDO[f.key]}</div></td>
         <td class="note">${f.base_legal}</td>
         <td>${f.resguardo}</td>
         <td class="note">${f.regla}</td>
-        <td class="num c-${f.color}">${money(usd,'USD')}</td>
-        <td class="num c-${f.color}">${money(bs,'Bs')}</td>
+        ${cells}
       </tr>`;
     }).join('');
   const totales={}; movs.forEach(m=>{totales[m.moneda]=(totales[m.moneda]||0)+Number(m.monto||0)*(m.tipo==='Egreso'?-1:1);});
