@@ -462,10 +462,13 @@ function rowsToObj(rows){
   const head = rows[0].map(h=>h.trim());
   return rows.slice(1).map(r=>{ const o={}; head.forEach((h,i)=>{ o[h]=r[i]; }); return o; });
 }
-// Numero en formato VE: punto miles, coma decimal ("32,19" -> 32.19; "1.234,56" -> 1234.56)
+// Numero: si hay coma es formato VE (punto=miles, coma=decimal);
+// si no hay coma, es numero estandar (punto=decimal). "32,19"->32.19 | "3887.05"->3887.05 | "1.234,56"->1234.56
 function numVE(s){
   if(s==null) return 0;
-  const n=Number((''+s).trim().replace(/\./g,'').replace(',','.'));
+  s=(''+s).trim();
+  if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.');
+  const n=Number(s);
   return isNaN(n)?0:n;
 }
 
