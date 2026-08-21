@@ -454,7 +454,7 @@ function saldosPorFondo(){
   const s={}; FONDOS.forEach(f=>s[f.key]={total:0, porMoneda:{}});
   s.General={total:0, porMoneda:{}};
   const hoy=new Date(); const trimStart=new Date(hoy.getFullYear(), Math.floor(hoy.getMonth()/3)*3, 1);
-  const res={ingresos:0, gastos:0};
+  const res={ingresos:{}, gastos:{}};
   movs.forEach(m=>{
     const v=Number(m.monto||0), t=m.tipo;
     const sign = t==='Egreso' ? -1 : 1;
@@ -464,7 +464,7 @@ function saldosPorFondo(){
     s[m.fondo].total=Math.round(s[m.fondo].total*100)/100;
     s[m.fondo].porMoneda[m.moneda]=Math.round(s[m.fondo].porMoneda[m.moneda]*100)/100;
     if(m.fecha>=trimStart.toISOString().slice(0,10)){
-      if(t==='Ingreso') res.ingresos+=v; else res.gastos+=v;
+      if(t==='Ingreso') res.ingresos[m.moneda]=(res.ingresos[m.moneda]||0)+v; else res.gastos[m.moneda]=(res.gastos[m.moneda]||0)+v;
     }
   });
   return {s,res};
@@ -490,6 +490,7 @@ function renderResumen(){
   const totalPat={};
   FONDOS.forEach(f=>{ const d=s[f.key]||{porMoneda:{}}; Object.entries(d.porMoneda).forEach(([m,v])=>{ totalPat[m]=(totalPat[m]||0)+v; }); });
   const patrimonioTxt=Object.entries(totalPat).filter(([m,v])=>v!==0).map(([m,v])=>money(v,m)).join(' · ')||money(0,'USD');
+  const fmtRes = o => Object.entries(o).filter(([m,v])=>v!==0).map(([m,v])=>money(v,m)).join(' · ')||money(0,'USD');
   const res=saldosPorFondo().res;
   const salud=s.Salud||{porMoneda:{}};
   const saludExt=(salud.porMoneda.USD||0)+(salud.porMoneda.USDT||0);
@@ -497,13 +498,15 @@ function renderResumen(){
   const resg=Math.round(saludExt * 100 / Math.max(0.0001, saludTotal));
   $('statsResumen').innerHTML = `
     <div class="stat"><div class="sv" style="color:var(--teal)">${patrimonioTxt}</div><div class="sl2">Patrimonio en fondos</div></div>
-    <div class="stat"><div class="sv" style="color:var(--gr)">${money(res.ingresos,'USD')}</div><div class="sl2">Ingresos del trimestre</div></div>
-    <div class="stat"><div class="sv" style="color:var(--ro)">${money(res.gastos,'USD')}</div><div class="sl2">Gastos del trimestre</div></div>
+    <div class="stat"><div class="sv" style="color:var(--gr)">${fmtRes(res.ingresos)}</div><div class="sl2">Ingresos del trimestre</div></div>
+    <div class="stat"><div class="sv" style="color:var(--ro)">${fmtRes(res.gastos)}</div><div class="sl2">Gastos del trimestre</div></div>
     <div class="stat"><div class="sv ${resg>=50?'ok':'err'}">${resg}%</div><div class="sl2">Fondo Salud en USD/USDT (mín. 50%)</div></div>`;
-  const total=Math.max(1,res.ingresos+res.gastos);
-  $('barIngresos').innerHTML = `
-    <div class="bar-row"><div class="bl">Ingresos</div><div class="bw"><div class="bf" style="width:${Math.round(res.ingresos*100/total)}%">${money(res.ingresos,'USD')}</div></div><div class="bv2">${fmt(res.ingresos)}</div></div>
-    <div class="bar-row"><div class="bl">Gastos</div><div class="bw"><div class="bf" style="width:${Math.round(res.gastos*100/total)}%;background:var(--ro)">${money(res.gastos,'USD')}</div></div><div class="bv2">${fmt(res.gastos)}</div></div>`;
+  const monBarras=new Set([...Object.keys(res.ingresos), ...Object.keys(res.gastos)]);
+  $('barIngresos').innerHTML = monBarras.size ? [...monBarras].map(m=>{
+    const ing=res.ingresos[m]||0, gas=res.gastos[m]||0, tot=Math.max(1,ing+gas);
+    return `<div class="bar-row"><div class="bl">Ingresos (${m})</div><div class="bw"><div class="bf" style="width:${Math.round(ing*100/tot)}%">${money(ing,m)}</div></div><div class="bv2">${fmt(ing)}</div></div>`+
+      `<div class="bar-row"><div class="bl">Gastos (${m})</div><div class="bw"><div class="bf" style="width:${Math.round(gas*100/tot)}%;background:var(--ro)">${money(gas,m)}</div></div><div class="bv2">${fmt(gas)}</div></div>`;
+  }).join('') : '<div class="note" style="text-align:center;padding:14px">Sin movimientos este trimestre.</div>';
   const ult=[...movs].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,8);
   $('ultMov').innerHTML = ult.length ? `<table class="tbl"><tr><th>Fecha</th><th>Concepto</th><th>Fondo</th><th>Moneda</th><th class="num">Monto</th></tr>`+
     ult.map(m=>`<tr><td>${m.fecha}</td><td>${m.concepto}</td><td><span class="badge b-gray">${NOM_FONDO[m.fondo]||m.fondo}</span></td><td>${m.moneda}</td><td class="num ${m.tipo==='Egreso'?'neg':'pos'}">${m.tipo==='Egreso'?'−':'+'} ${fmt(m.monto)}</td></tr>`).join('')+'</table>'
