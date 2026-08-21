@@ -691,6 +691,9 @@ async function loadSheets(){
     }
   }catch(e){ }
   renderAll();
+  if(effCfg().api){
+    movs.filter(m=>!m.enviado).forEach(m=> sendToSheet(m).then(ok=>{ if(ok){ persist(); renderMov(); renderResumen(); renderFondos(); } }));
+  }
 }
 function renderAll(){ renderResumen(); renderMov(); renderFondos(); renderConc(); renderAudit(); }
 
