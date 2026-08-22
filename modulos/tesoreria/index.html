@@ -379,9 +379,10 @@ async function loadConfigJson(){
         fondos: normalizeURL(j.fondos||''),
         conc: normalizeURL(j.conc||''),
         api: (j.api||'').trim(),
-        api_token: (j.api_token||'').trim()
+        api_token: (j.api_token||'').trim(),
+        live: j.live===true
       };
-      cfg = {...cfgRemote, api: (cfg.api||cfgRemote.api||''), api_token: (cfg.api_token||cfgRemote.api_token||'')};
+      cfg = {...cfgRemote, api: (cfg.api||cfgRemote.api||''), api_token: (cfg.api_token||cfgRemote.api_token||''), live: j.live===true};
       lsSet('promuf_cfg', JSON.stringify(cfg));
     }
   }catch(e){ cfgRemote = null; }
@@ -592,6 +593,7 @@ function addMov(){
   if(!m.concepto){ toast('Indica el concepto','e'); return; }
   movs.push(m); persist(); renderMov(); renderResumen(); renderFondos();
   sendToSheet(m).then(ok=>{
+    if(ok) loadSheets();
     toast(ok ? 'Movimiento guardado y ENVIADO a la hoja' : 'Movimiento guardado localmente (sin API conectada)',
           ok ? 's' : 'i');
   });
@@ -688,7 +690,13 @@ function renderFondos(){
 /* ═══════════════ CONCILIACIÓN ═══════════════ */
 async function renderConc(){
   let rows=[];
-  try{ const txt=await fetchCSV(bust(effCfg().conc)); if(txt) rows=rowsToObj(parseCSV(txt)); }catch(e){}
+  try{
+    const live=await fetchLive();
+    if(live && live.conciliacion){ try{ rows=rowsToObj(parseCSV(live.conciliacion)); }catch(e){} }
+  }catch(e){}
+  if(!rows.length){
+    try{ const txt=await fetchCSV(bust(effCfg().conc)); if(txt) rows=rowsToObj(parseCSV(txt)); }catch(e){}
+  }
   const cols=rows.length?Object.keys(rows[0]):['periodo','fecha_conciliacion','codigo_cuenta','cuenta','moneda','saldo_libros','saldo_banco','diferencia','conciliado','observaciones'];
   $('concTbl').innerHTML=rows.length?`<tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>`+
     rows.map(r=>`<tr>${cols.map(c=>`<td class="${c==='saldo_libros'||c==='saldo_banco'||c==='diferencia'?'num':''}">${r[c]}</td>`).join('')}</tr>`).join('')
@@ -696,6 +704,34 @@ async function renderConc(){
 }
 
 /* ═══════════════ CARGA DE SHEETS Y RENDER ═══════════════ */
+/* ── Lectura en vivo desde la hoja (Apps Script doGet) ── */
+async function fetchLive(){
+  const e=effCfg();
+  if(e.live===false || !e.api) return null;
+  try{
+    const ck='promuf_live';
+    try{ const c=JSON.parse(sessionStorage.getItem(ck)||'null'); if(c&&c.ts&&Date.now()-c.ts<60000) return c.data; }catch(e2){}
+    const ctrl=new AbortController();
+    const to=setTimeout(()=>ctrl.abort(), 5000);
+    let r;
+    try{ r=await fetch(e.api+(e.api.includes('?')?'&':'?')+'read=1', {cache:'no-store', signal:ctrl.signal}); }
+    finally{ clearTimeout(to); }
+    if(!r.ok) return null;
+    const j=await r.json();
+    if(!j||!j.ok||!j.movimientos) return null;
+    try{ sessionStorage.setItem(ck, JSON.stringify({ts:Date.now(), data:j})); }catch(e3){}
+    return j;
+  }catch(e4){ return null; }
+}
+function mapearRemotos(remote){
+  return remote.map(r=>({
+    id:'gs-'+r.fecha+'-'+Math.random().toString(36).slice(2,8),
+    fecha:r.fecha, fondo:r.fondo||'General', cuenta:r.codigo_cuenta||r.cuenta||'',
+    moneda:r.moneda||'USD', tipo:r.tipo_movimiento||r.tipo||'Ingreso',
+    monto:Math.abs(numVE(r.monto)), concepto:r.concepto||'',
+    evento:r.evento||'', agremiado:r.agremiado||'', soporte:r.soporte||''
+  })).filter(m=>m.fecha&&m.monto);
+}
 async function loadSheets(){
   await loadConfigJson();
   LOAD_STATUS = 'cfg.mov='+(effCfg().mov||'(vacío)');
@@ -703,35 +739,44 @@ async function loadSheets(){
     document.body.classList.add('pub-mode'); go('mov');
   }
   const e=effCfg();
+  let remotos=[], fuente='';
+  // 1) Lectura en vivo (Apps Script doGet) — prioritaria, sin lag de caché de Google
   try{
-    if(e.mov){
+    const live=await fetchLive();
+    if(live && live.movimientos){
+      const remote=rowsToObj(repararFormatosVE(parseCSV(live.movimientos)));
+      remotos=mapearRemotos(remote);
+      fuente='live';
+      LOAD_STATUS += ' | live='+remotos.length;
+    }
+  }catch(e0){ LOAD_STATUS += ' | live ERROR: '+e0.message; }
+  // 2) Respaldo: data/*.csv mismo origen (si la lectura en vivo falla)
+  if(!remotos.length && e.mov){
+    try{
       const txt=await fetchCSV(bust(e.mov));
       if(txt){
         const remote=rowsToObj(repararFormatosVE(parseCSV(txt)));
-        const remotos=remote.map(r=>({
-          id:'gs-'+r.fecha+'-'+Math.random().toString(36).slice(2,8),
-          fecha:r.fecha, fondo:r.fondo||'General', cuenta:r.codigo_cuenta||r.cuenta||'',
-          moneda:r.moneda||'USD', tipo:r.tipo_movimiento||r.tipo||'Ingreso',
-          monto:Math.abs(numVE(r.monto)), concepto:r.concepto||'',
-          evento:r.evento||'', agremiado:r.agremiado||'', soporte:r.soporte||''
-        })).filter(m=>m.fecha&&m.monto);
-        LOAD_STATUS += ' | remotos='+remotos.length;
-        const localIds=new Set(movs.map(m=>m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta));
-        const remoteSet=new Set(remotos.map(r=>r.fecha+'|'+r.concepto+'|'+r.monto+'|'+r.cuenta));
-        movs.forEach(m=>{ m.enviado=remoteSet.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta); });
-        movs=movs.concat(remotos.filter(m=>!localIds.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta)));
-        persist();
-        runAudit();
-        if(lastAudit && lastAudit.eliminados.length && !document.body.classList.contains('pub-mode')){
-          toast('⚠ Auditoría: '+lastAudit.eliminados.length+' movimiento(s) eliminado(s) o modificado(s) en la hoja','e');
-        }
-      } else {
-        LOAD_STATUS += ' | CSV vacío';
-      }
-    } else {
-      LOAD_STATUS += ' | sin e.mov';
+        remotos=mapearRemotos(remote);
+        fuente='csv';
+        LOAD_STATUS += ' | csv='+remotos.length;
+      } else { LOAD_STATUS += ' | CSV vacío'; }
+    }catch(e1){ LOAD_STATUS += ' | csv ERROR: '+e1.message; }
+  } else if(!remotos.length){
+    LOAD_STATUS += ' | sin fuente';
+  }
+  // merge con borradores locales
+  if(remotos.length){
+    const localIds=new Set(movs.map(m=>m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta));
+    const remoteSet=new Set(remotos.map(r=>r.fecha+'|'+r.concepto+'|'+r.monto+'|'+r.cuenta));
+    movs.forEach(m=>{ m.enviado=remoteSet.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta); });
+    movs=movs.concat(remotos.filter(m=>!localIds.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta)));
+    persist();
+    runAudit();
+    if(lastAudit && lastAudit.eliminados.length && !document.body.classList.contains('pub-mode')){
+      toast('⚠ Auditoría: '+lastAudit.eliminados.length+' movimiento(s) eliminado(s) o modificado(s) en la hoja','e');
     }
-  }catch(e){ LOAD_STATUS += ' | ERROR: '+e.message; }
+  }
+  console.log('[tesoreria] '+LOAD_STATUS+(fuente?' ['+fuente+']':''));
   renderAll();
 }
 function renderAll(){ renderResumen(); renderMov(); renderFondos(); renderConc(); renderAudit(); }
