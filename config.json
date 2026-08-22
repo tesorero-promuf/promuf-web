@@ -7,5 +7,6 @@
   "fondos": "../../data/fondos.csv",
   "conc": "../../data/conciliacion.csv",
   "api": "https://script.google.com/macros/s/AKfycbwaJ5qEiS8flOWRS-MqSvnIbNyClbT70sL8LjpvPwt0hTE13-EWlEfzW80igiQsCpqx/exec",
-  "api_token": "pf-6c7f9c2a12b0dd6c95ca6ec8ba7306a4"
+  "api_token": "pf-6c7f9c2a12b0dd6c95ca6ec8ba7306a4",
+  "live": true
 }
