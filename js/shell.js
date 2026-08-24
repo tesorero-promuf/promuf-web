@@ -8,7 +8,7 @@
 const $ = id => document.getElementById(id);
 let MODULOS = [];
 let CFG = {};
-const APP_VER = 'r27';
+const APP_VER = 'r28';
 
 const AVISO_TIPOS = {
   aviso:      { ico: '📢', clase: 'b-teal' },
@@ -171,13 +171,20 @@ function cardAviso(a){
     </div>`;
 }
 
-/* ── Auto-actualización: si hay una versión nueva, recarga ── */
+/* ── Auto-actualización: si hay una versión nueva, recarga (máx. 1 vez por versión) ── */
 async function chequeoVersion(){
   try{
     const r = await fetch('version.txt?_='+Date.now(), {cache:'no-store'});
     if(r.ok){
       const v = (await r.text()).trim();
-      if(v && v !== APP_VER) location.reload(true);
+      if(v && v !== APP_VER){
+        let intentado='';
+        try{ intentado = sessionStorage.getItem('promuf_vupd')||''; }catch(e){}
+        if(intentado !== v){
+          try{ sessionStorage.setItem('promuf_vupd', v); }catch(e){}
+          location.reload(true);
+        }
+      }
     }
   }catch(e){}
 }
