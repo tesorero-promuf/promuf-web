@@ -8,7 +8,7 @@
 const $ = id => document.getElementById(id);
 let MODULOS = [];
 let CFG = {};
-const APP_VER = 'r26';
+const APP_VER = 'r27';
 
 const AVISO_TIPOS = {
   aviso:      { ico: '📢', clase: 'b-teal' },
@@ -22,7 +22,8 @@ const DOCUMENTOS = [
   { nombre: 'Reglamento Comité de Contraloría', archivo: 'docs/reglamento_comite_contraloria.pdf', tag: 'Oficial' },
   { nombre: 'Reglamento Comité Técnico',    archivo: 'docs/reglamento_comite_tecnico.pdf',      tag: 'Oficial' },
   { nombre: 'Reglamento Comité Disciplinario', archivo: 'docs/reglamento_comite_disciplinario.pdf', tag: 'Oficial' },
-  { nombre: 'Reglamento Comité Electoral',  archivo: 'docs/reglamento_comite_electoral.pdf',    tag: 'Oficial' }
+  { nombre: 'Reglamento Comité Electoral',  archivo: 'docs/reglamento_comite_electoral.pdf',    tag: 'Oficial' },
+  { nombre: 'Código de Ética',              archivo: 'docs/codigo_de_etica.pdf',                  tag: 'Oficial' }
 ];
 
 function toast(msg, tipo){
