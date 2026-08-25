@@ -8,7 +8,7 @@
 const $ = id => document.getElementById(id);
 let MODULOS = [];
 let CFG = {};
-const APP_VER = 'r28';
+const APP_VER = 'r29';
 
 const AVISO_TIPOS = {
   aviso:      { ico: '📢', clase: 'b-teal' },
