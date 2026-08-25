@@ -237,3 +237,19 @@ code{background:var(--caribeb);color:var(--caribe2);padding:1px 6px;border-radiu
   .shell-hd{padding:13px 16px}
   .hero{padding:30px 20px;border-radius:22px}
 }
+
+/* ── Ajustes responsive conservadores ── */
+html,body{overflow-x:hidden}
+.shell-main,.shell-hd,.shell-nav{min-width:0}
+.shell-frame{min-height:320px}
+@media(max-width:420px){
+  .shell-hd{gap:8px}
+  .shell-logo{width:40px;height:40px;font-size:1.15rem}
+  .shell-name{font-size:1.08rem}
+  .shell-sub{font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+  .shell-nav{padding:9px 10px}
+  .shell-tab{padding:8px 12px;font-size:.78rem}
+  .shell-main{padding:16px 10px 34px}
+  .shell-ft{padding:22px 14px 30px;font-size:.68rem}
+  .shell-ft .ft-brand{font-size:.85rem}
+}
