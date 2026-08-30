@@ -209,6 +209,17 @@
   </div>
   <div class="cs">
     <h3>Movimientos <span class="tag" id="movCount"></span></h3>
+    <div class="fb" style="margin-bottom:12px">
+      <select class="in" id="movFondoFiltro" onchange="renderMov()" style="max-width:220px">
+        <option value="">Todos los fondos</option>
+        <option value="General">General</option>
+        <option value="Membresia">F1 · Membresía</option>
+        <option value="Salud">F2 · Salud</option>
+        <option value="Autogestion">F3 · Autogestión</option>
+        <option value="Ahorro">F4 · Ahorro</option>
+        <option value="Operaciones">F5 · Operaciones</option>
+      </select>
+    </div>
     <div class="tbl-wrap" id="movTbl"></div>
   </div>
 </div>
@@ -626,7 +637,10 @@ async function dispatchSync(){
 }
 function persist(){ lsSet('promuf_movs', JSON.stringify(movs)); }
 function renderMov(){
-  const rows=[...movs].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const filtroFondo = ($('movFondoFiltro') && $('movFondoFiltro').value) || '';
+  const rows=[...movs]
+    .filter(m => !filtroFondo || (m.fondo || 'General') === filtroFondo)
+    .sort((a,b)=>b.fecha.localeCompare(a.fecha));
   $('movCount').textContent=rows.length+' registros';
   const drafts=movs.filter(m=>!m.enviado).length;
   const lb=$('btnLimpiar');
@@ -646,7 +660,7 @@ function renderMov(){
       ${document.body.classList.contains('pub-mode')?'':(m.enviado
         ? '<td><span class="badge b-green" title="Ya está en la hoja; no se puede eliminar">🔒 Hoja</span></td>'
         : `<td><button class="btn bs br" onclick="delMov('${m.id}')" title="Borrador local no enviado">✕</button></td>`)}
-    </tr>`).join('')+'</table>'     : '<div class="note" style="text-align:center;padding:14px">Sin movimientos registrados.<div style="font-size:.7rem;opacity:.7;margin-top:6px">debug: '+LOAD_STATUS+'</div></div>';
+    </tr>`).join('')+'</table>'     : '<div class="note" style="text-align:center;padding:14px">Sin movimientos registrados para este fondo.<div style="font-size:.7rem;opacity:.7;margin-top:6px">debug: '+LOAD_STATUS+'</div></div>';
 }
 function delMov(id){
   const m=movs.find(x=>x.id===id);
