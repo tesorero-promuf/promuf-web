@@ -392,7 +392,7 @@ async function loadConfigJson(){
 function readQuery(){
   try{
     const p=new URLSearchParams(location.search);
-    if(p.get('pub')==='1'){ document.body.classList.add('pub-mode'); go('mov'); }
+    if(p.get('pub')==='1'){ document.body.classList.add('pub-mode'); go('resumen'); }
     const c={};
     if(p.get('mov')) c.mov=p.get('mov');
     if(p.get('fondos')) c.fondos=p.get('fondos');
@@ -738,7 +738,7 @@ async function loadSheets(){
   await loadConfigJson();
   LOAD_STATUS = 'cfg.mov='+(effCfg().mov||'(vacío)');
   if(!document.body.classList.contains('pub-mode') && Object.keys(cfg).length===0 && cfgRemote && cfgRemote.mov){
-    document.body.classList.add('pub-mode'); go('mov');
+    document.body.classList.add('pub-mode'); go('resumen');
   }
   const e=effCfg();
   let remotos=[], fuente='';
