@@ -595,27 +595,38 @@ function addMov(){
     agremiado: $('mAgremiado').value.trim(),
     soporte: $('mSoporte').value.trim(),
     id: Date.now()+''+Math.floor(Math.random()*1000),
+    enviado: false,  // Inicialmente es borrador local
   };
   if(!m.monto){ toast('Indica el monto','e'); return; }
   if(!m.concepto){ toast('Indica el concepto','e'); return; }
-  movs.push(m); renderMov(); renderResumen(); renderFondos();
+  movs.push(m);
   sendToSheet(m).then(ok=>{
-    if(ok) loadSheets();
-    toast(ok ? 'Movimiento guardado y ENVIADO a la hoja' : 'Movimiento guardado localmente (sin API conectada)',
-          ok ? 's' : 'i');
+    if(ok){
+      toast('Movimiento guardado y ENVIADO a la hoja 🔒','s');
+      // El movimiento ya tiene enviado=true dentro de sendToSheet
+    } else {
+      toast('No se pudo enviar a la hoja. El registro se guarda como borrador local','w');
+    }
+    renderMov(); renderResumen(); renderFondos();
   });
   $('mMonto').value=''; $('mConcepto').value='';
 }
 async function sendToSheet(m){
   const e=effCfg();
-  if(!e.api) return false;
+  if(!e.api){ toast('API de Google Sheets no configurada','e'); return false; }
   try{
     const c=CATALOGO.find(x=>x.codigo===m.cuenta);
     const r=await fetch(e.api,{method:'POST',body:JSON.stringify({...m, cuenta_nombre:c?c.cuenta:'', usuario:'Tesorero', token:e.api_token||''})});
     const j=await r.json();
-    if(j&&j.ok){ m.enviado=true; renderMov(); renderResumen(); renderFondos(); dispatchSync(); return true; }
+    if(j&&j.ok){
+      m.enviado=true;
+      toast('Movimiento guardado y ENVIADO a la hoja 🔒','s');
+      renderMov(); renderResumen(); renderFondos(); dispatchSync();
+      return true;
+    }
+    toast('Error en la hoja: '+ (j?.error||'respuesta desconocida'),'e');
     return false;
-  }catch(e2){ return false; }
+  }catch(e2){ toast('No se conectó a la hoja','e'); return false; }
 }
 async function dispatchSync(){
   const t=effCfg().gh_token;
