@@ -178,7 +178,12 @@ async function chequeoVersion(){
     if(r.ok){
       const v = (await r.text()).trim();
       if(v && v !== APP_VER){
-        location.reload(true);
+        let intentado='';
+        try{ intentado = sessionStorage.getItem('promuf_vupd')||''; }catch(e){}
+        if(intentado !== v){
+          try{ sessionStorage.setItem('promuf_vupd', v); }catch(e){}
+          location.reload(true);
+        }
       }
     }
   }catch(e){}
