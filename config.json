@@ -3,7 +3,7 @@
     {"fecha": "2026-08-20", "tipo": "importante", "texto": "El gremio se encuentra en espera del registro del Acta Constitutiva. La operación formal comienza en cuanto se oficialice el registro."},
     {"fecha": "2026-08-20", "tipo": "novedad", "texto": "Bienvenidos al nuevo Sistema Gremial PROMUF: un solo lugar para la tesorería, el carnet digital y más módulos."}
   ],
-  "mov": "../../data/movimientos.csv",
+  "mov": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQxhyBk_6vnEZnkGqpyEoV7hhroRq_LxpNTBizH4297eZXmuZCcW-eLPwZccxFboh6X7SjN8OdRicB6/pub?gid=973272967&single=true",
   "fondos": "../../data/fondos.csv",
   "conc": "../../data/conciliacion.csv",
   "api": "https://script.google.com/macros/s/AKfycbwaJ5qEiS8flOWRS-MqSvnIbNyClbT70sL8LjpvPwt0hTE13-EWlEfzW80igiQsCpqx/exec",
