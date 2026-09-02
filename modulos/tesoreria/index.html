@@ -438,7 +438,14 @@ function fallbackCopy(text){
 /* ═══════════════ CONEXIÓN GOOGLE SHEETS (publicado = solo lectura) ═══════════════ */
 async function fetchCSV(url){
   if(!url) return null;
-  const r = await fetch(url, { cache: 'no-store' });
+  const ctrl = new AbortController();
+  const timeout = setTimeout(() => ctrl.abort(), 8000);
+  let r;
+  try{
+    r = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+  }finally{
+    clearTimeout(timeout);
+  }
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.text();
 }
@@ -751,7 +758,7 @@ async function fetchLive(){
   if(e.live===false || !e.api) return null;
   try{
     const ctrl=new AbortController();
-    const to=setTimeout(()=>ctrl.abort(), 5000);
+    const to=setTimeout(()=>ctrl.abort(), 8000);
     let r;
     try{ r=await fetch(e.api+(e.api.includes('?')?'&':'?')+'read=1', {cache:'no-store', signal:ctrl.signal}); }
     finally{ clearTimeout(to); }
@@ -775,37 +782,62 @@ async function loadSheets(){
   if(!document.body.classList.contains('pub-mode') && Object.keys(cfg).length===0 && cfgRemote && cfgRemote.mov){
     document.body.classList.add('pub-mode'); go('resumen');
   }
+  const esPublico = document.body.classList.contains('pub-mode');
   const e=effCfg();
-  let remotos=[], fuente='';
+  let remotos=[], fuente='', fuenteDisponible=false;
   // 1) Lectura en vivo (Apps Script doGet) — prioritaria, sin lag de caché de Google
   try{
     const live=await fetchLive();
     if(live && live.movimientos){
-      const remote=rowsToObj(repararFormatosVE(parseCSV(live.movimientos)));
-      remotos=mapearRemotos(remote);
-      fuente='live';
-      LOAD_STATUS += ' | live='+remotos.length;
+      const parsed=parseCSV(live.movimientos);
+      if(parsed.length >= 1){
+        const remote=rowsToObj(repararFormatosVE(parsed));
+        remotos=mapearRemotos(remote);
+        fuente='live';
+        fuenteDisponible=true;
+        LOAD_STATUS += ' | live='+remotos.length;
+      }
     }
   }catch(e0){ LOAD_STATUS += ' | live ERROR: '+e0.message; }
-  // 2) Respaldo: data/*.csv mismo origen (si la lectura en vivo falla)
-  if(!remotos.length && e.mov){
+  // 2) Respaldo: CSV publicado de la hoja (si la lectura en vivo falla)
+  if(!fuenteDisponible && e.mov){
     try{
       const txt=await fetchCSV(bust(e.mov));
       if(txt){
-        const remote=rowsToObj(repararFormatosVE(parseCSV(txt)));
-        remotos=mapearRemotos(remote);
-        fuente='csv';
-        LOAD_STATUS += ' | csv='+remotos.length;
+        const parsed=parseCSV(txt);
+        if(parsed.length > 1){
+          const remote=rowsToObj(repararFormatosVE(parsed));
+          remotos=mapearRemotos(remote);
+          fuente='csv';
+          fuenteDisponible=true;
+          LOAD_STATUS += ' | csv='+remotos.length;
+        } else {
+          LOAD_STATUS += ' | CSV sin filas';
+        }
       } else { LOAD_STATUS += ' | CSV vacío'; }
     }catch(e1){ LOAD_STATUS += ' | csv ERROR: '+e1.message; }
-  } else if(!remotos.length){
+  }
+  // 3) Respaldo estático de último recurso para visitantes sin estado local.
+  if(!fuenteDisponible && esPublico && !movs.length){
+    try{
+      const txt=await fetchCSV('../../data/movimientos.csv');
+      if(txt){
+        remotos=mapearRemotos(rowsToObj(repararFormatosVE(parseCSV(txt))));
+        fuente='static';
+        fuenteDisponible=true;
+        LOAD_STATUS += ' | static='+remotos.length;
+      }
+    }catch(e2){ LOAD_STATUS += ' | static ERROR: '+e2.message; }
+  }
+  if(!fuenteDisponible){
     LOAD_STATUS += ' | sin fuente';
   }
-  // merge con borradores locales: la hoja es la fuente de verdad, pero conservamos borradores no enviados
-  if(remotos.length || movs.length){
+  // En público la hoja reemplaza por completo el estado local cuando una fuente respondió.
+  // Si ambas fuentes fallan, conserva el último estado conocido en vez de mostrar una lista vacía.
+  if((esPublico && fuenteDisponible) || (!esPublico && (remotos.length || movs.length))){
     const sig = m => [m.fecha, m.concepto, String(m.monto), m.cuenta, m.fondo, m.moneda, m.tipo].join('|');
     const remoteSet = new Set(remotos.map(sig));
-    const localDrafts = movs.filter(m => !m.enviado);
+    const localDrafts = esPublico ? [] : movs.filter(m => !m.enviado);
     const merged = remotos.map(r => ({ ...r, enviado: true }));
     const pending = localDrafts.filter(m => !remoteSet.has(sig(m))).map(m => ({ ...m, enviado: false }));
     movs = [...merged, ...pending];
