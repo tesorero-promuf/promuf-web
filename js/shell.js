@@ -171,19 +171,15 @@ function cardAviso(a){
     </div>`;
 }
 
-/* ── Auto-actualización: si hay una versión nueva, recarga (máx. 1 vez por versión) ── */
+/* ── Auto-actualización: revisa versión nueva (sin recarga automática para evitar bucle) ── */
 async function chequeoVersion(){
   try{
     const r = await fetch('version.txt?_='+Date.now(), {cache:'no-store'});
     if(r.ok){
       const v = (await r.text()).trim();
       if(v && v !== APP_VER){
-        let intentado='';
-        try{ intentado = sessionStorage.getItem('promuf_vupd')||''; }catch(e){}
-        if(intentado !== v){
-          try{ sessionStorage.setItem('promuf_vupd', v); }catch(e){}
-          location.reload(true);
-        }
+        // Solo mostramos aviso en consola, sin recarga automática
+        console.log('[PROMUF] Nueva versión disponible: ' + v + '(actual: ' + APP_VER + ')');
       }
     }
   }catch(e){}
