@@ -595,18 +595,27 @@ function addMov(){
     agremiado: $('mAgremiado').value.trim(),
     soporte: $('mSoporte').value.trim(),
     id: Date.now()+''+Math.floor(Math.random()*1000),
-    enviado: false,  // Inicialmente es borrador local
+    enviado: false,  // Inicialmente es borrador local (se enviará a hoja)
   };
   if(!m.monto){ toast('Indica el monto','e'); return; }
   if(!m.concepto){ toast('Indica el concepto','e'); return; }
   movs.push(m);
   sendToSheet(m).then(ok=>{
     if(ok){
-      toast('Movimiento guardado y ENVIADO a la hoja 🔒','s');
-      // El movimiento ya tiene enviado=true dentro de sendToSheet
+      // Movimiento enviado exitosamente a la hoja, persiste permanentemente
+      toast('✅ Movimiento guardado y ENVIADO a la hoja 🔒','s');
     } else {
-      toast('No se pudo enviar a la hoja. El registro se guarda como borrador local','w');
+      // Envío falló - el movimiento NO se guardó en la hoja
+      // Sin localStorage, este movimiento se perderá al recargar
+      // El usuario debe asegurar que la API y la hoja estén configuradas
+      toast('❌ No se pudo enviar a la hoja. Verifica configuración en ⚙ Config', 'e');
+      // Opcional: si quieres mantenerlo temporal mientras el usuario repara la config,
+      // pero SIN localStorage el movimiento se perderá al recargar
     }
+    renderMov(); renderResumen(); renderFondos();
+  });
+  $('mMonto').value=''; $('mConcepto').value='';
+}
     renderMov(); renderResumen(); renderFondos();
   });
   $('mMonto').value=''; $('mConcepto').value='';
