@@ -438,7 +438,7 @@ function fallbackCopy(text){
 /* ═══════════════ CONEXIÓN GOOGLE SHEETS (publicado = solo lectura) ═══════════════ */
 async function fetchCSV(url){
   if(!url) return null;
-  const r = await fetch(url);
+  const r = await fetch(url, { cache: 'no-store' });
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.text();
 }
@@ -801,12 +801,14 @@ async function loadSheets(){
   } else if(!remotos.length){
     LOAD_STATUS += ' | sin fuente';
   }
-  // merge con borradores locales
-  if(remotos.length){
-    const localIds=new Set(movs.map(m=>m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta));
-    const remoteSet=new Set(remotos.map(r=>r.fecha+'|'+r.concepto+'|'+r.monto+'|'+r.cuenta));
-    movs.forEach(m=>{ m.enviado=remoteSet.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta); });
-    movs=movs.concat(remotos.filter(m=>!localIds.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta)));
+  // merge con borradores locales: la hoja es la fuente de verdad, pero conservamos borradores no enviados
+  if(remotos.length || movs.length){
+    const sig = m => [m.fecha, m.concepto, String(m.monto), m.cuenta, m.fondo, m.moneda, m.tipo].join('|');
+    const remoteSet = new Set(remotos.map(sig));
+    const localDrafts = movs.filter(m => !m.enviado);
+    const merged = remotos.map(r => ({ ...r, enviado: true }));
+    const pending = localDrafts.filter(m => !remoteSet.has(sig(m))).map(m => ({ ...m, enviado: false }));
+    movs = [...merged, ...pending];
     persist();
     runAudit();
     if(lastAudit && lastAudit.eliminados.length && !document.body.classList.contains('pub-mode')){
