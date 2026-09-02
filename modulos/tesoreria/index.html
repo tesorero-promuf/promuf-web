@@ -365,7 +365,23 @@ function saveConfig(){
 
 /* ═══════════════ MODO PÚBLICO Y COMPARTIR ═══════════════ */
 let cfgRemote = null;
+let snap = null;
 let LOAD_STATUS = '';
+function persist(){
+  try{
+    const payload = { movs, snap };
+    localStorage.setItem('promuf_tesoreria_state', JSON.stringify(payload));
+  }catch(e){}
+}
+function loadPersistedState(){
+  try{
+    const raw = localStorage.getItem('promuf_tesoreria_state');
+    if(!raw) return;
+    const parsed = JSON.parse(raw);
+    if(Array.isArray(parsed.movs)) movs = parsed.movs;
+    if(parsed.snap && Array.isArray(parsed.snap.movs)) snap = parsed.snap;
+  }catch(e){}
+}
 function normalizeURL(u){
   if(!u) return u;
   if(u.includes('/pubhtml')) u = u.replace('/pubhtml','/pub');
@@ -616,10 +632,6 @@ function addMov(){
   });
   $('mMonto').value=''; $('mConcepto').value='';
 }
-    renderMov(); renderResumen(); renderFondos();
-  });
-  $('mMonto').value=''; $('mConcepto').value='';
-}
 async function sendToSheet(m){
   const e=effCfg();
   if(!e.api){ toast('API de Google Sheets no configurada','e'); return false; }
@@ -810,7 +822,13 @@ function renderAll(){ renderResumen(); renderMov(); renderFondos(); renderConc()
 let lastAudit=null;
 function fp(m){ return [m.fecha,m.cuenta,m.fondo,m.moneda,m.monto,m.tipo,(m.concepto||'')].join('|'); }
 function baseKey(f){ const p=f.split('|'); return p[0]+'|'+p[1]+'|'+(p[6]||''); }
-function takeSnapshot(){ /* Auditoria: usa la hoja como fuente única de verdad */ }
+function takeSnapshot(){
+  snap = {
+    fecha: Date.now(),
+    movs: movs.filter(m => m.enviado).map(fp)
+  };
+  persist();
+}
 function runAudit(){
   lastAudit=null;
   if(!snap||!snap.movs) return null;
@@ -850,6 +868,7 @@ function resetBaseline(){
 }
 
 /* init */
+loadPersistedState();
 readQuery();
 fillCuentas(); $('mFecha').value=hoy();
 renderPlan(); renderAll();
