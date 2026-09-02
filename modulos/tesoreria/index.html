@@ -817,8 +817,10 @@ async function loadSheets(){
       } else { LOAD_STATUS += ' | CSV vacío'; }
     }catch(e1){ LOAD_STATUS += ' | csv ERROR: '+e1.message; }
   }
-  // 3) Respaldo estático de último recurso para visitantes sin estado local.
-  if(!fuenteDisponible && esPublico && !movs.length){
+  // 3) Respaldo estático de último recurso cuando no hay estado local.
+  // Evita una pantalla vacía en la vista pública y en la privada durante
+  // una caída temporal de Apps Script/Google Sheets.
+  if(!fuenteDisponible && !movs.length){
     try{
       const txt=await fetchCSV('../../data/movimientos.csv');
       if(txt){
