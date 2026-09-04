@@ -512,7 +512,9 @@ async function sendToFirestore(m){
        ts: new Date()
     };
     delete docData.id;
-    const docRef = await db.collection('movimientos').add(docData);
+    delete docData.saving;
+    const docRef = db.collection('movimientos').doc(String(m.id));
+    await docRef.set(docData, {merge:true});
     m.enviado = true;
     m.id = docRef.id;
      persist();
@@ -521,6 +523,30 @@ async function sendToFirestore(m){
     console.error('[Firestore] Error al guardar movimiento:', e2);
     return false;
   }
+}
+async function guardarMovimiento(m){
+  if(m.saving) return false;
+  m.saving=true;
+  for(let intento=0; intento<3; intento++){
+    if(await sendToFirestore(m)){
+      delete m.saving;
+      persist();
+      renderMov();
+      renderResumen();
+      renderFondos();
+      return true;
+    }
+    if(intento<2) await new Promise(resolve=>setTimeout(resolve, 1000*(intento+1)));
+  }
+  delete m.saving;
+  persist();
+  renderMov();
+  toast('No se pudo conectar con Firestore. El borrador seguirá reintentándose.', 'e');
+  return false;
+}
+async function reintentarBorradores(){
+  const pendientes = movs.filter(m=>!m.enviado);
+  for(const m of pendientes) await guardarMovimiento(m);
 }
 
 /* ═══════════════ RESUMEN ═══════════════ */
@@ -645,10 +671,9 @@ function addMov(){
   try{ renderResumen(); }catch(e){ console.error('[renderResumen]',e); }
   try{ renderFondos(); }catch(e){ console.error('[renderFondos]',e); }
   if(hasFirebase()){
-    sendToFirestore(m).then(ok=>{
-      toast(ok ? 'Movimiento guardado y ENVIADO a Firestore' : 'Movimiento guardado localmente (sin conexión a Firestore)',
-            ok ? 's' : 'i');
-    }).catch(e=>console.error('[sendToFirestore]',e));
+    guardarMovimiento(m).then(ok=>{
+      if(ok) toast('Movimiento guardado y ENVIADO a Firestore','s');
+    }).catch(e=>console.error('[guardarMovimiento]',e));
   } else {
     toast('Movimiento guardado localmente','i');
   }
@@ -772,6 +797,7 @@ async function loadSheets(){
 
   // 1) Inicializar Firebase y escuchar en tiempo real
   initFirebase();
+  if(db) reintentarBorradores();
   if(db && e.live!==false){
     try{
       startLiveListener((remote) => {
