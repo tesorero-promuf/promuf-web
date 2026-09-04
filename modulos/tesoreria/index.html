@@ -320,6 +320,21 @@ const CATALOGO = [{"codigo": "1.0.00.00", "cuenta": "ACTIVO", "grupo": "Activo",
 let movs = [];
 try { movs = JSON.parse(lsGet('promuf_movs')||'[]'); } catch(e) { movs=[]; }
 let cfg = {};
+function persist(){
+  try{
+    lsSet('promuf_movs', JSON.stringify(movs));
+  }catch(e){
+    console.error('[persist]', e);
+  }
+}
+function loadPersistedMovs(){
+  try{
+    const saved = JSON.parse(lsGet('promuf_movs') || '[]');
+    if(Array.isArray(saved)) movs = saved;
+  }catch(e){
+    console.error('[loadPersistedMovs]', e);
+  }
+}
 try { cfg = JSON.parse(lsGet('promuf_cfg')||'{}'); } catch(e) { cfg={}; }
 
 const FONDOS = [
@@ -502,7 +517,10 @@ async function sendToFirestore(m){
     m.id = docRef.id;
      persist();
      return true;
-  }catch(e2){ return false; }
+  }catch(e2){
+    console.error('[Firestore] Error al guardar movimiento:', e2);
+    return false;
+  }
 }
 
 /* ═══════════════ RESUMEN ═══════════════ */
@@ -869,6 +887,7 @@ function resetBaseline(){
 
 /* init */
 readQuery();
+loadPersistedMovs();
 fillCuentas(); $('mFecha').value=hoy();
 renderPlan(); renderAll();
 loadSheets();
