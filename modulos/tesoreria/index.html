@@ -380,7 +380,7 @@ function readQuery(){
     if(p.get('pub')==='1'){ document.body.classList.add('pub-mode'); go('mov'); }
   }catch(e){}
 }
-function effCfg(){ return {...(cfgRemote||{}), ...cfg}; }
+function effCfg(){ return cfg; }
 
 /* ═══════════════ UTILIDADES ═══════════════ */
 function bust(u){
