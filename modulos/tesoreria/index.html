@@ -620,12 +620,15 @@ function addMov(){
   };
   if(!m.monto){ toast('Indica el monto','e'); return; }
   if(!m.concepto){ toast('Indica el concepto','e'); return; }
-  movs.push(m); persist(); renderMov(); renderResumen(); renderFondos();
+  movs.push(m); persist();
+  try{ renderMov(); }catch(e){ console.error('[renderMov]',e); }
+  try{ renderResumen(); }catch(e){ console.error('[renderResumen]',e); }
+  try{ renderFondos(); }catch(e){ console.error('[renderFondos]',e); }
   if(hasFirebase()){
     sendToFirestore(m).then(ok=>{
       toast(ok ? 'Movimiento guardado y ENVIADO a Firestore' : 'Movimiento guardado localmente (sin conexión a Firestore)',
             ok ? 's' : 'i');
-    });
+    }).catch(e=>console.error('[sendToFirestore]',e));
   } else {
     toast('Movimiento guardado localmente','i');
   }
@@ -633,6 +636,7 @@ function addMov(){
 }
 
 function renderMov(){
+  try{
   const fFecha=$('movFecha')?.value||'';
   const fConcepto=$('movConcepto')?.value?.toLowerCase()||'';
   const fCuenta=$('movCuenta')?.value||'';
@@ -666,6 +670,7 @@ function renderMov(){
         ? '<td><span class="badge b-green" title="Ya está en la base de datos; no se puede eliminar">🔒 BD</span></td>'
         : `<td><button class="btn bs br" onclick="delMov('${m.id}')" title="Borrador local no enviado">✕</button></td>`)}
     </tr>`).join('')+'</table>'     : '<div class="note" style="text-align:center;padding:14px">Sin movimientos registrados.<div style="font-size:.7rem;opacity:.7;margin-top:6px">debug: '+LOAD_STATUS+'</div></div>';
+  }catch(e){ console.error('[renderMov]',e); }
 }
 function populateMovFilters(){
   const cuentas=[...new Set(movs.map(m=>m.cuenta))].sort();
