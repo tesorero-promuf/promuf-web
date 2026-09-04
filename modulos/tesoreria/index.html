@@ -431,13 +431,14 @@ let liveUnsubscribe = null;
 function initFirebase(){
   const e = effCfg();
   const fb = e.firebase;
-  if(!fb || !fb.projectId){ return null; }
+  if(!fb || !fb.projectId){ console.error('[Firebase] No config:', e.firebase?.projectId); return null; }
   try{
     if(!firebase.apps || !firebase.apps.length){
       firebase.initializeApp(fb);
     }
-     db = firebase.firestore();
-     return db;
+      db = firebase.firestore();
+      console.log('[Firebase] db ok:', db);
+      return db;
   }catch(e2){
     console.error('[Firebase] Error de inicialización:', e2);
     return null;
@@ -484,7 +485,8 @@ function startLiveListener(callback){
 }
 
 async function sendToFirestore(m){
-  if(!db){ return false; }
+  console.log('[Firestore] db:', !!db, 'projectId:', effCfg().firebase?.projectId);
+  if(!db){ console.error('[Firestore] db is null/undefined'); return false; }
   try{
     const c=CATALOGO.find(x=>x.codigo===m.cuenta);
     const docData = {
