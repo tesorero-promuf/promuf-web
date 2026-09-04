@@ -436,9 +436,8 @@ function initFirebase(){
     if(!firebase.apps || !firebase.apps.length){
       firebase.initializeApp(fb);
     }
-    db = firebase.firestore();
-    db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
-    return db;
+     db = firebase.firestore();
+     return db;
   }catch(e2){
     console.error('[Firebase] Error de inicialización:', e2);
     return null;
