@@ -735,7 +735,17 @@ function setMovPage(page){
   renderMov();
 }
 function volverArriba(){
-  window.scrollTo({top:0,behavior:'smooth'});
+  const behavior={top:0,left:0,behavior:'smooth'};
+  window.scrollTo(behavior);
+  document.documentElement.scrollTo(behavior);
+  document.body.scrollTo(behavior);
+  try{
+    if(window.parent!==window){
+      window.parent.scrollTo(behavior);
+      window.parent.document.documentElement.scrollTo(behavior);
+      window.parent.document.querySelector('.shell-main')?.scrollTo(behavior);
+    }
+  }catch(e){ console.warn('[volverArriba]',e); }
 }
 function populateMovFilters(){
   const cuentas=[...new Set(movs.map(m=>m.cuenta))].sort();
