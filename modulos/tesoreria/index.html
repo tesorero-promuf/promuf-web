@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Tesorería PROMUF — Profesionales de la Música del Estado Falcón</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
 <style>
@@ -116,6 +116,10 @@
   @media(max-width:640px){.hd{padding:10px 14px}.tab{padding:9px 11px;font-size:.75rem}.tc{padding:14px}.sg{grid-template-columns:repeat(2,1fr)}.sc .sn{font-size:1.15rem}.bl{width:100px!important}.cs{padding:14px;overflow-x:auto}.tbl{min-width:620px}.row2{grid-template-columns:1fr 1fr}.fb{align-items:stretch}.fb .in{max-width:none!important;flex:1 1 160px}.hd .sub{max-width:62vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#fondosTbl,#concTbl,#planTbl{min-width:620px}}
   @media(max-width:420px){.sg{grid-template-columns:1fr 1fr;gap:8px}.sc{padding:12px 9px}.sc .sn{font-size:1rem}.sc .sl{font-size:.63rem}.row2{grid-template-columns:1fr}.btn{width:100%;justify-content:center}.tt{left:12px;right:12px}.t{text-align:center}}
 </style>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
 </head>
 <body>
 
@@ -134,7 +138,7 @@
   <button class="tab" data-t="fondos" onclick="go('fondos')">Fondos</button>
   <button class="tab" data-t="conc" onclick="go('conc')">Conciliación</button>
   <button class="tab no-pub" data-t="audit" onclick="go('audit')">Auditoría</button>
-  <button class="tab no-pub" data-t="guia" onclick="go('guia')">Guía de importación</button>
+  <button class="tab no-pub" data-t="guia" onclick="go('guia')">Guía de migración</button>
 </div>
 
 <!-- ═══════════ RESUMEN ═══════════ -->
@@ -146,7 +150,7 @@
     <div id="barIngresos"><div class="ld"><div class="spin"></div>Cargando datos…</div></div>
   </div>
   <div class="cs">
-    <h3>Últimos movimientos <span class="tag">desde Google Sheets o registro local</span></h3>
+    <h3>Últimos movimientos <span class="tag">desde Firebase o registro local</span></h3>
     <div class="tbl-wrap" id="ultMov"></div>
   </div>
 </div>
@@ -236,10 +240,10 @@
 <!-- ═══════════ AUDITORÍA ═══════════ -->
 <div class="tc" id="tc-audit">
   <div class="cs">
-    <h3>Auditoría de integridad <span class="tag">detecta cambios en la hoja entre cargas</span></h3>
+    <h3>Auditoría de integridad <span class="tag">detecta cambios en la base de datos entre cargas</span></h3>
     <div id="auditStatus"></div>
     <div style="margin-top:12px"><button class="btn bt" onclick="resetBaseline()">✔ Establecer esta línea base</button></div>
-    <div class="note" style="margin-top:10px">El sistema guarda una "foto" de los movimientos de la hoja. Si al recargar detecta filas eliminadas o montos modificados, lo marca aquí. Así el Comité de Contraloría y la Junta Directiva pueden detectar manipulaciones. Los cambios legítimos (ej. limpiar filas de prueba) se silencian estableciendo una nueva línea base.</div>
+    <div class="note" style="margin-top:10px">El sistema guarda una "foto" de los movimientos de la base de datos. Si al recargar detecta filas eliminadas o montos modificados, lo marca aquí. Así el Comité de Contraloría y la Junta Directiva pueden detectar manipulaciones. Los cambios legítimos (ej. limpiar filas de prueba) se silencian estableciendo una nueva línea base.</div>
   </div>
   <div class="cs"><h3>Cambios desde la última línea base</h3><div id="auditChanges"></div></div>
 </div>
@@ -247,14 +251,14 @@
 <!-- ═══════════ GUÍA ═══════════ -->
 <div class="tc" id="tc-guia">
   <div class="cs">
-    <h3>Base de datos en Google Sheets — cómo importar</h3>
+    <h3>Base de datos en Firebase Firestore — cómo funciona</h3>
     <div class="note" style="color:var(--tx2)">
-      <b style="color:var(--tx)">1. Crea la hoja</b> en <b>docs.google.com/spreadsheets</b> con tu cuenta <b>tesoreropromuf@gmail.com</b> y nómbrala <b>"Tesoreria PROMUF"</b>.<br>
-      <b>2. Crea 5 pestañas:</b> <i>PlanDeCuentas</i>, <i>Movimientos</i>, <i>Fondos</i>, <i>Socios</i> y <i>Conciliacion</i>.<br>
-      <b>3. Importa los CSV de este repositorio:</b> en cada pestaña usa <i>Archivo → Importar → Subir</i> y elige el archivo de la carpeta <code>data/</code> (movimientos_template.csv, fondos.csv, conciliacion_template.csv, socios_template.csv) y <code>plan_de_cuentas.csv</code> en su pestaña.<br>
-      <b>4. Publica la hoja:</b> <i>Archivo → Compartir → Publicar en la web</i> → selecciona cada pestaña → formato <b>CSV</b> → copia la URL de cada pestaña.<br>
-      <b>5. Pega las URLs aquí:</b> botón ⚙ Config → guarda → el dashboard se conecta (solo lectura) y verás saldos, fondos y movimientos en vivo.<br>
-      <b>6. Flujo de trabajo diario:</b> registras movimientos aquí → la API los escribe solos en la pestaña <i>Movimientos</i> de la hoja → la hoja queda como base de datos oficial y el dashboard la refleja al publicarse.
+      <b style="color:var(--tx)">1. Proyecto Firebase</b> llamado <b>"tesorero-bd"</b> creado en <b>console.firebase.google.com</b>.<br>
+      <b>2. Colecciones</b> en Firestore: <i>movimientos</i>, <i>fondos</i>, <i>conciliacion</i>, <i>catalogo</i>.<br>
+      <b>3. Configuración</b>: las credenciales del proyecto van en <code>config.json</code> y se cargan automáticamente.<br>
+      <b>4. Los datos se sincronizan en tiempo real</b>: cada movimiento registrado se escribe directamente en Firestore y el dashboard lo refleja al instante.<br>
+      <b>5. Sembrar datos iniciales</b>: ejecuta <code>node scripts/sync_data.mjs</code> para importar los CSV existentes a Firestore.<br>
+      <b>6. Flujo de trabajo diario</b>: registras movimientos aquí → se guardan en Firestore → el dashboard se actualiza en tiempo real → el Comité de Contraloría audita trimestralmente (Art. 5 R.CC).
     </div>
     <h3 style="margin-top:18px">Reglas contables que cumple este sistema</h3>
     <div class="note" style="color:var(--tx2)">
@@ -273,15 +277,18 @@
 <div class="mo" id="moConfig">
   <div class="ml2">
     <button class="mx" onclick="closeConfig()">✕</button>
-    <h2>Configuración — Google Sheets</h2>
-    <div class="fg2"><label>URL CSV publicada — pestaña Movimientos</label><input class="in" id="cfgMov" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?gid=0&amp;single=true&amp;output=csv"></div>
-    <div class="fg2"><label>URL CSV publicada — pestaña Fondos</label><input class="in" id="cfgFondos" placeholder="…"></div>
-    <div class="fg2"><label>URL CSV publicada — pestaña Conciliación</label><input class="in" id="cfgConc" placeholder="…"></div>
-    <div class="fg2"><label>URL API Apps Script (envío automático de movimientos)</label><input class="in" id="cfgApi" placeholder="https://script.google.com/macros/s/…/exec"></div>
-    <div class="fg2"><label>Token API (protege la hoja contra envíos no autorizados)</label><input class="in" id="cfgToken" placeholder="pf-…"></div>
-    <div class="fg2"><label>Token de GitHub (sincronización en tiempo real de la web)</label><input class="in" id="cfgGh" placeholder="github_pat_…" type="password"></div>
-    <div class="note">Para publicar: <i>Archivo → Compartir → Publicar en la web</i>, elige la pestaña y formato CSV, copia la URL de cada pestaña. Las hojas publicadas permiten lectura sin clave (solo lectura).<br><br><b>Envío automático:</b> con la URL de la API (ver <code>scripts/agregar_movimiento.gs</code>) en <code>config.json</code>, cada movimiento guardado se escribe solo en la pestaña <i>Movimientos</i> y queda blindado 🔒.</div>
-    <div class="note" style="margin-top:8px;padding:10px;background:rgba(230,196,104,.08);border-radius:8px">📌 Las URLs del <code>config.json</code> del repositorio tienen prioridad sobre estas al abrir la versión online; este formulario se usa cuando no hay <code>config.json</code> o para probar otra hoja. El campo de la API sí se puede sobrescribir localmente. Si pegaste enlaces <code>pubhtml</code>, se convierten a CSV automáticamente.</div>
+    <h2>Configuración — Firebase Firestore</h2>
+    <div class="note" style="margin-bottom:14px;padding:10px;background:rgba(63,208,201,.08);border-radius:8px">
+      🔥 La base de datos es <b>Firestore</b> del proyecto <b>tesorero-bd</b>. La configuración se carga automáticamente desde <code>config.json</code>. Si estás en local, verifica que el archivo tenga las credenciales correctas.
+    </div>
+    <div class="fg2"><label>ID del proyecto Firebase</label><input class="in" id="cfgProjectId" placeholder="tesorero-bd"></div>
+    <div class="note" style="margin-top:8px">
+      Para configurar: crea un proyecto en <b>console.firebase.google.com</b>, activa Firestore, agrega una app web y copia las credenciales a <code>config.json</code>.<br><br>
+      <b>Reglas de Firestore sugeridas</b> (ajustables en la consola de Firebase):<br>
+      <code>match /movimientos/{doc} { allow read: if true; allow write: if request.auth != null; }</code><br>
+      <code>match /fondos/{doc} { allow read: if true; allow write: if request.auth != null; }</code><br>
+      <code>match /conciliacion/{doc} { allow read: if true; allow write: if request.auth != null; }</code>
+    </div>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn bt" onclick="saveConfig()">Guardar y conectar</button>
       <button class="btn bo" onclick="testCfg()">Probar conexión</button>
@@ -337,18 +344,13 @@ function go(t){
   document.querySelectorAll('.tc').forEach(c=>c.classList.toggle('on', c.id==='tc-'+t));
 }
 function openConfig(){
-  $('cfgMov').value=cfg.mov||''; $('cfgFondos').value=cfg.fondos||''; $('cfgConc').value=cfg.conc||''; $('cfgApi').value=cfg.api||''; $('cfgToken').value=cfg.api_token||''; $('cfgGh').value=cfg.gh_token||'';
+  $('cfgProjectId').value=cfg.firebase?.projectId||'';
   $('moConfig').classList.add('on');
 }
 function closeConfig(){ $('moConfig').classList.remove('on'); }
 function saveConfig(){
   cfg={
-    mov:normalizeURL($('cfgMov').value.trim()),
-    fondos:normalizeURL($('cfgFondos').value.trim()),
-    conc:normalizeURL($('cfgConc').value.trim()),
-    api:$('cfgApi').value.trim(),
-    api_token:$('cfgToken').value.trim(),
-    gh_token:$('cfgGh').value.trim()
+    firebase:{...cfg.firebase, projectId:$('cfgProjectId').value.trim()}
   };
   lsSet('promuf_cfg', JSON.stringify(cfg));
   closeConfig(); testCfg(); renderAll();
@@ -358,54 +360,48 @@ function saveConfig(){
 /* ═══════════════ MODO PÚBLICO Y COMPARTIR ═══════════════ */
 let cfgRemote = null;
 let LOAD_STATUS = '';
-function normalizeURL(u){
-  if(!u) return u;
-  if(u.includes('/pubhtml')) u = u.replace('/pubhtml','/pub');
-  if(!u.includes('output=csv')) u += u.includes('?') ? '&output=csv' : '?output=csv';
-  return u;
+function readQuery(){
+  try{
+    const p=new URLSearchParams(location.search);
+    if(p.get('pub')==='1'){ document.body.classList.add('pub-mode'); go('mov'); }
+  }catch(e){}
 }
+function effCfg(){ return {...(cfgRemote||{}), ...cfg}; }
+
+/* ═══════════════ UTILIDADES ═══════════════ */
 function bust(u){
   const v = new URLSearchParams(location.search).get('v');
   if(!v) return u;
   return u + (u.includes('?') ? '&' : '?') + 'v=' + v;
 }
-function lsGet(k){ try{ return lsGet(k); }catch(e){ return null; } }
-function lsSet(k,v){ try{ lsSet(k,v); }catch(e){} }
-async function loadConfigJson(){
-  try{
-    const r = await fetch(bust('../../config.json'));
-    if(r.ok){
-      const j = await r.json();
-      cfgRemote = {
-        mov: normalizeURL(j.mov||''),
-        fondos: normalizeURL(j.fondos||''),
-        conc: normalizeURL(j.conc||''),
-        api: (j.api||'').trim(),
-        api_token: (j.api_token||'').trim(),
-        live: j.live===true
-      };
-      cfg = {...cfgRemote, api: (cfg.api||cfgRemote.api||''), api_token: (cfg.api_token||cfgRemote.api_token||''), live: j.live===true};
-      lsSet('promuf_cfg', JSON.stringify(cfg));
-    }
-  }catch(e){ cfgRemote = null; }
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function numVE(s){
+  if(s==null) return 0;
+  s=(''+s).trim();
+  if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.');
+  const n=Number(s);
+  return isNaN(n)?0:n;
 }
-function readQuery(){
-  try{
-    const p=new URLSearchParams(location.search);
-    if(p.get('pub')==='1'){ document.body.classList.add('pub-mode'); go('mov'); }
-    const c={};
-    if(p.get('mov')) c.mov=p.get('mov');
-    if(p.get('fondos')) c.fondos=p.get('fondos');
-    if(p.get('conc')) c.conc=p.get('conc');
-    if(Object.keys(c).length){ cfg={...cfg,...c}; lsSet('promuf_cfg',JSON.stringify(cfg)); }
-  }catch(e){}
-}
-function effCfg(){ return {...(cfgRemote||{}), ...cfg}; }
+function renderAll(){ renderResumen(); renderMov(); renderFondos(); renderConc(); renderAudit(); }
+
 function copyText(t){
   const ok=()=>toast('Enlace copiado al portapapeles','s');
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(t).then(ok,()=>{ fallbackCopy(t); });
   } else fallbackCopy(t);
+}
+function testCfg(){
+  const e = effCfg();
+  if(!e.firebase || !e.firebase.projectId){
+    toast('Sin proyecto Firebase configurado','e'); return;
+  }
+  if(!firebase.apps || !firebase.apps.length){
+    toast('Firebase no inicializado. Conecta en ⚙ Config','e'); return;
+  }
+  firebase.firestore().collection('movimientos').limit(1).get()
+    .then(()=> toast('Conexión a Firestore OK','s'))
+    .catch(()=> toast('Error al conectar con Firestore','e'));
 }
 function fallbackCopy(text){
   const ta=document.createElement('textarea'); ta.value=text;
@@ -414,67 +410,85 @@ function fallbackCopy(text){
   ta.remove();
 }
 
-/* ═══════════════ CONEXIÓN GOOGLE SHEETS (publicado = solo lectura) ═══════════════ */
-async function fetchCSV(url){
-  if(!url) return null;
-  const r = await fetch(url);
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.text();
-}
-function parseCSV(txt){
-  const rows=[]; let cur='', row=[], q=false;
-  for(let i=0;i<txt.length;i++){
-    const c=txt[i];
-    if(q){ if(c==='"'){ if(txt[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
-    else if(c==='"') q=true;
-    else if(c===','){ row.push(cur); cur=''; }
-    else if(c==='\n'||c==='\r'){ if(c==='\r'&&txt[i+1]==='\n')i++; row.push(cur); cur=''; if(row.length>1||row[0]!=='') rows.push(row); row=[]; }
-    else cur+=c;
-  }
-  if(cur!==''||row.length){ row.push(cur); rows.push(row); }
-  return rows.filter(r=>r.some(c=>c.trim()!==''));
-}
-// Post-procesado: arregla números en formato VE (punto miles, coma decimal)
-// que parseCSV pudo haber dividido erroneamente en columnas separadas.
-function repararFormatosVE(rows){
-  if(!rows.length) return rows;
-  // La hoja "Movimientos" tiene 11 columnas esperadas
-  const COLUMNA_MONTO = 5;
-  const colEsperadas = 11;
-  return rows.map((row, idx)=> idx===0? row : (function(){
-    // Si la fila tiene más elementos que las 11 columnas esperadas,
-    // el elemento de más es probablemente la parte decimal de un número VE
-    if(row.length > colEsperadas){
-      // Revisar si el campo del monto (índice 5) y el de más parecen un VE dividido
-      const montoParte1 = row[COLUMNA_MONTO] || '';
-      const montoParte2 = row[COLUMNA_MONTO + 1] || '';
-      if(montoParte1 && montoParte2 && montoParte1.includes('.') && /^\d+$/.test(montoParte2)){
-        // Elimina el punto de miles y junta con la parte decimal
-        const reparado = montoParte1.replace(/\./g,'') + '.' + montoParte2;
-        const nuevoRow = [...row];
-        nuevoRow[COLUMNA_MONTO] = reparado;
-        nuevoRow.splice(COLUMNA_MONTO + 1, 1);
-        return nuevoRow;
-      }
+/* ═══════════════ FIREBASE — INICIALIZACIÓN ═══════════════ */
+let db = null;
+let liveUnsubscribe = null;
+
+function initFirebase(){
+  const e = effCfg();
+  const fb = e.firebase;
+  if(!fb || !fb.projectId){ return null; }
+  try{
+    if(!firebase.apps || !firebase.apps.length){
+      firebase.initializeApp(fb);
     }
-    return row;
-  })());
-}
-function rowsToObj(rows){
-  if(!rows.length) return [];
-  const head = rows[0].map(h=>h.trim());
-  return rows.slice(1).map(r=>{ const o={}; head.forEach((h,i)=>{ o[h]=r[i]; }); return o; });
-}
-// Numero: si hay coma es formato VE (punto=miles, coma=decimal);
-// si no hay coma, es numero estandar (punto=decimal). "32,19"->32.19 | "3887.05"->3887.05 | "1.234,56"->1234.56
-function numVE(s){
-  if(s==null) return 0;
-  s=(''+s).trim();
-  if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.');
-  const n=Number(s);
-  return isNaN(n)?0:n;
+    db = firebase.firestore();
+    db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
+    return db;
+  }catch(e2){
+    console.error('[Firebase] Error de inicialización:', e2);
+    return null;
+  }
 }
 
+function hasFirebase(){
+  const e = effCfg();
+  return !!(e.firebase && e.firebase.projectId);
+}
+
+/* ═══════════════ CONEXIÓN FIREBASE (Firestore) ═══════════════ */
+async function fetchFirestore(collection, limit){
+  if(!db) return null;
+  try{
+    let q = db.collection(collection).orderBy('fecha','desc');
+    if(limit) q = q.limit(limit);
+    const snap = await q.get();
+    return snap.docs.map(doc => ({...doc.data(), id: doc.id}));
+  }catch(e){ return null; }
+}
+
+async function fetchFirestoreAll(collection){
+  if(!db) return [];
+  try{
+    const snap = await db.collection(collection).orderBy('fecha','asc').get();
+    return snap.docs.map(doc => ({...doc.data(), id: doc.id}));
+  }catch(e){ return []; }
+}
+
+function startLiveListener(callback){
+  if(!db){ callback([]); return; }
+  try{
+    liveUnsubscribe = db.collection('movimientos')
+      .orderBy('fecha','desc')
+      .onSnapshot((snapshot) => {
+        const docs = snapshot.docs.map(doc => ({...doc.data(), id: doc.id}));
+        callback(docs);
+      }, (error) => {
+        console.error('[Firestore listener error]', error);
+        callback([]);
+      });
+  }catch(e){ callback([]); }
+}
+
+async function sendToFirestore(m){
+  if(!db){ return false; }
+  try{
+    const c=CATALOGO.find(x=>x.codigo===m.cuenta);
+    const docData = {
+      ...m,
+      cuenta_nombre: c?c.cuenta:'',
+       usuario:'Tesorero',
+       fecha: m.fecha||new Date().toISOString().slice(0,10),
+       ts: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    delete docData.id;
+    const docRef = await db.collection('movimientos').add(docData);
+    m.enviado = true;
+    m.id = docRef.id;
+     persist();
+     return true;
+  }catch(e2){ return false; }
+}
 
 /* ═══════════════ RESUMEN ═══════════════ */
 function saldosPorFondo(){
@@ -537,10 +551,10 @@ function renderResumen(){
   const ult=[...movs].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,8);
   $('ultMov').innerHTML = ult.length ? `<table class="tbl"><tr><th>Fecha</th><th>Concepto</th><th>Fondo</th><th>Moneda</th><th class="num">Monto</th></tr>`+
     ult.map(m=>`<tr><td>${m.fecha}</td><td>${m.concepto}</td><td><span class="badge b-gray">${NOM_FONDO[m.fondo]||m.fondo}</span></td><td>${m.moneda}</td><td class="num ${m.tipo==='Egreso'?'neg':'pos'}">${m.tipo==='Egreso'?'−':'+'} ${fmt(m.monto)}</td></tr>`).join('')+'</table>'
-    : '<div class="note" style="text-align:center;padding:14px">Aún no hay movimientos. Regístralos en la pestaña Movimientos o conecta tu hoja en ⚙ Config.</div>';
+    : '<div class="note" style="text-align:center;padding:14px">Aún no hay movimientos. Regístralos en la pestaña Movimientos o conecta tu base de datos en ⚙ Config.</div>';
 }
 
-/* ═══════════════ PLAN DE CUENTAS ═══════════════ */
+/* ═══════════ PLAN DE CUENTAS ═══════════ */
 const FONDO_BADGE = {General:'b-gray', Membresia:'b-teal', Salud:'b-gold', Autogestion:'b-green', Operaciones:'b-purple'};
 function renderPlan(){
   const q=($('buscarCuenta').value||'').toLowerCase();
@@ -565,7 +579,7 @@ function renderPlan(){
     </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--tx3)">Sin resultados</td></tr>';
 }
 
-/* ═══════════════ MOVIMIENTOS ═══════════════ */
+/* ═══════════ MOVIMIENTOS ═══════════ */
 function fillCuentas(){
   const sel=$('mCuenta');
   const postable=CATALOGO.filter(c=>!CUENTAS_PARENT.includes(c.codigo));
@@ -594,36 +608,17 @@ function addMov(){
   if(!m.monto){ toast('Indica el monto','e'); return; }
   if(!m.concepto){ toast('Indica el concepto','e'); return; }
   movs.push(m); persist(); renderMov(); renderResumen(); renderFondos();
-  sendToSheet(m).then(ok=>{
-    if(ok) loadSheets();
-    toast(ok ? 'Movimiento guardado y ENVIADO a la hoja' : 'Movimiento guardado localmente (sin API conectada)',
-          ok ? 's' : 'i');
-  });
+  if(hasFirebase()){
+    sendToFirestore(m).then(ok=>{
+      toast(ok ? 'Movimiento guardado y ENVIADO a Firestore' : 'Movimiento guardado localmente (sin conexión a Firestore)',
+            ok ? 's' : 'i');
+    });
+  } else {
+    toast('Movimiento guardado localmente','i');
+  }
   $('mMonto').value=''; $('mConcepto').value='';
 }
-async function sendToSheet(m){
-  const e=effCfg();
-  if(!e.api) return false;
-  try{
-    const c=CATALOGO.find(x=>x.codigo===m.cuenta);
-    const r=await fetch(e.api,{method:'POST',body:JSON.stringify({...m, cuenta_nombre:c?c.cuenta:'', usuario:'Tesorero', token:e.api_token||''})});
-    const j=await r.json();
-    if(j&&j.ok){ m.enviado=true; persist(); dispatchSync(); return true; }
-    return false;
-  }catch(e2){ return false; }
-}
-async function dispatchSync(){
-  const t=effCfg().gh_token;
-  if(!t) return;
-  try{
-    await fetch('https://api.github.com/repos/tesorero-promuf/promuf-web/actions/workflows/sync-data.yml/dispatches',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
-      body:JSON.stringify({ref:'main'})
-    });
-    toast('Sincronizando la web en tiempo real…','i');
-  }catch(e2){}
-}
+
 function persist(){ lsSet('promuf_movs', JSON.stringify(movs)); }
 function renderMov(){
   const rows=[...movs].sort((a,b)=>b.fecha.localeCompare(a.fecha));
@@ -631,10 +626,10 @@ function renderMov(){
   const drafts=movs.filter(m=>!m.enviado).length;
   const lb=$('btnLimpiar');
   if(lb){ lb.style.display=drafts?'':'none'; lb.textContent='🗑 Limpiar local ('+drafts+' borrador'+(drafts===1?'':'es')+')'; }
-  const apiOn=!!effCfg().api;
+  const apiOn=!!hasFirebase();
   $('movNote').textContent = apiOn
-    ? 'Blindaje: los movimientos enviados a la hoja (🔒) NO se pueden eliminar desde aquí; el ✕ solo borra borradores locales no enviados. La hoja conserva historial de versiones y el Comité de Contraloría audita trimestralmente (Art. 5 R.CC).'
-    : 'Sin API conectada: estos registros son borradores locales y no se envían a la hoja. Conecta la API en ⚙ Config para que cada registro enviado quede blindado con 🔒 y no pueda borrarse.';
+    ? 'Blindaje: los movimientos enviados a Firestore (🔒) NO se pueden eliminar desde aquí; el ✕ solo borra borradores locales no enviados. Firestore conserva historial de versiones y el Comité de Contraloría audita trimestralmente (Art. 5 R.CC).'
+    : 'Sin conexión a Firestore: estos registros son borradores locales y no se envían a la base de datos. Conecta Firestore en ⚙ Config para que cada registro enviado quede blindado con 🔒 y no pueda borrarse.';
   $('movTbl').innerHTML = rows.length ? `<table class="tbl"><tr><th>Fecha</th><th>Concepto</th><th>Cuenta</th><th>Fondo</th><th>Mon</th><th class="num">Monto</th>${document.body.classList.contains('pub-mode')?'':`<th>${apiOn?'Blindaje':'Estado'}</th>`}</tr>`+
     rows.map(m=>`<tr>
       <td>${m.fecha}</td>
@@ -644,22 +639,22 @@ function renderMov(){
       <td>${m.moneda}</td>
       <td class="num ${m.tipo==='Egreso'?'neg':'pos'}">${m.tipo==='Egreso'?'−':'+'} ${fmt(m.monto)}</td>
       ${document.body.classList.contains('pub-mode')?'':(m.enviado
-        ? '<td><span class="badge b-green" title="Ya está en la hoja; no se puede eliminar">🔒 Hoja</span></td>'
+        ? '<td><span class="badge b-green" title="Ya está en la base de datos; no se puede eliminar">🔒 BD</span></td>'
         : `<td><button class="btn bs br" onclick="delMov('${m.id}')" title="Borrador local no enviado">✕</button></td>`)}
     </tr>`).join('')+'</table>'     : '<div class="note" style="text-align:center;padding:14px">Sin movimientos registrados.<div style="font-size:.7rem;opacity:.7;margin-top:6px">debug: '+LOAD_STATUS+'</div></div>';
 }
 function delMov(id){
   const m=movs.find(x=>x.id===id);
-  if(m&&m.enviado){ toast('Este registro ya está en la hoja — no se puede eliminar','e'); return; }
+  if(m&&m.enviado){ toast('Este registro ya está en la base de datos — no se puede eliminar','e'); return; }
   movs=movs.filter(m=>m.id!==id); persist(); renderMov(); renderResumen();
 }
 function clearMov(){
   const drafts=movs.filter(m=>!m.enviado);
   if(!drafts.length){ toast('No hay borradores locales pendientes','i'); return; }
-  if(!confirm('¿Eliminar '+drafts.length+' borrador(es) local(es) no enviado(s)? Los que ya están en la hoja (🔒) se conservan.')) return;
+  if(!confirm('¿Eliminar '+drafts.length+' borrador(es) local(es) no enviado(s)? Los que ya están en la base de datos (🔒) se conservan.')) return;
   movs=movs.filter(m=>m.enviado); persist(); renderMov(); renderResumen(); toast('Borradores locales eliminados','i');
 }
-/* ═══════════════ FONDOS ═══════════════ */
+/* ═══════════ FONDOS ═══════════ */
 function renderFondos(){
   const {s}=saldosPorFondo();
   const ORDEN_MON=['USD','USDT','Bs'];
@@ -689,99 +684,97 @@ function renderFondos(){
     : '<div class="note" style="text-align:center;padding:14px">Sin movimientos aún.</div>';
 }
 
-/* ═══════════════ CONCILIACIÓN ═══════════════ */
+/* ═══════════ CONCILIACIÓN ═══════════ */
 async function renderConc(){
   let rows=[];
-  try{
-    const live=await fetchLive();
-    if(live && live.conciliacion){ try{ rows=rowsToObj(parseCSV(live.conciliacion)); }catch(e){} }
-  }catch(e){}
+  if(hasFirebase() && db){
+    try{
+      rows = await fetchFirestoreAll('conciliacion');
+      rows = rows.map(r=>({...r, codigo_cuenta:r.codigo_cuenta||r.codigo, cuenta:r.cuenta||r.nombre}));
+    }catch(e){}
+  }
   if(!rows.length){
-    try{ const txt=await fetchCSV(bust(effCfg().conc)); if(txt) rows=rowsToObj(parseCSV(txt)); }catch(e){}
+    try{ rows=JSON.parse(lsGet('promuf_conc')||'[]'); }catch(e){}
   }
   const cols=rows.length?Object.keys(rows[0]):['periodo','fecha_conciliacion','codigo_cuenta','cuenta','moneda','saldo_libros','saldo_banco','diferencia','conciliado','observaciones'];
   $('concTbl').innerHTML=rows.length?`<tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>`+
     rows.map(r=>`<tr>${cols.map(c=>`<td class="${c==='saldo_libros'||c==='saldo_banco'||c==='diferencia'?'num':''}">${r[c]}</td>`).join('')}</tr>`).join('')
-    :`<tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr><tr><td colspan="${cols.length}" style="text-align:center;color:var(--tx3);padding:20px">Sin datos. Importa data/conciliacion_template.csv a la pestaña Conciliacion de la hoja y conéctala en ⚙ Config. Debes presentar la conciliación bancaria cada trimestre (Art. 15.e Estatutos).</td></tr>`;
+    :`<tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr><tr><td colspan="${cols.length}" style="text-align:center;color:var(--tx3);padding:20px">Sin datos. Importa data/conciliacion_template.csv a la colección <i>conciliacion</i> de Firestore y conéctala en ⚙ Config. Debes presentar la conciliación bancaria cada trimestre (Art. 15.e Estatutos).</td></tr>`;
 }
 
-/* ═══════════════ CARGA DE SHEETS Y RENDER ═══════════════ */
-/* ── Lectura en vivo desde la hoja (Apps Script doGet) ── */
-async function fetchLive(){
-  const e=effCfg();
-  if(e.live===false || !e.api) return null;
-  try{
-    const ck='promuf_live';
-    try{ const c=JSON.parse(sessionStorage.getItem(ck)||'null'); if(c&&c.ts&&Date.now()-c.ts<60000) return c.data; }catch(e2){}
-    const ctrl=new AbortController();
-    const to=setTimeout(()=>ctrl.abort(), 5000);
-    let r;
-    try{ r=await fetch(e.api+(e.api.includes('?')?'&':'?')+'read=1', {cache:'no-store', signal:ctrl.signal}); }
-    finally{ clearTimeout(to); }
-    if(!r.ok) return null;
-    const j=await r.json();
-    if(!j||!j.ok||!j.movimientos) return null;
-    try{ sessionStorage.setItem(ck, JSON.stringify({ts:Date.now(), data:j})); }catch(e3){}
-    return j;
-  }catch(e4){ return null; }
-}
-function mapearRemotos(remote){
-  return remote.map(r=>({
-    id:'gs-'+r.fecha+'-'+Math.random().toString(36).slice(2,8),
-    fecha:r.fecha, fondo:r.fondo||'General', cuenta:r.codigo_cuenta||r.cuenta||'',
-    moneda:r.moneda||'USD', tipo:r.tipo_movimiento||r.tipo||'Ingreso',
-    monto:Math.abs(numVE(r.monto)), concepto:r.concepto||'',
-    evento:r.evento||'', agremiado:r.agremiado||'', soporte:r.soporte||''
-  })).filter(m=>m.fecha&&m.monto);
-}
+/* ═══════════ CARGA DE FIRESTORE Y RENDER ═══════════ */
 async function loadSheets(){
   await loadConfigJson();
-  LOAD_STATUS = 'cfg.mov='+(effCfg().mov||'(vacío)');
-  if(!document.body.classList.contains('pub-mode') && Object.keys(cfg).length===0 && cfgRemote && cfgRemote.mov){
+  LOAD_STATUS = 'firebase='+(effCfg().firebase?.projectId||'(sin config)');
+  if(!document.body.classList.contains('pub-mode') && Object.keys(cfg).length===0 && cfgRemote && cfgRemote.firebase?.projectId){
     document.body.classList.add('pub-mode'); go('mov');
   }
   const e=effCfg();
   let remotos=[], fuente='';
-  // 1) Lectura en vivo (Apps Script doGet) — prioritaria, sin lag de caché de Google
-  try{
-    const live=await fetchLive();
-    if(live && live.movimientos){
-      const remote=rowsToObj(repararFormatosVE(parseCSV(live.movimientos)));
-      remotos=mapearRemotos(remote);
-      fuente='live';
-      LOAD_STATUS += ' | live='+remotos.length;
-    }
-  }catch(e0){ LOAD_STATUS += ' | live ERROR: '+e0.message; }
-  // 2) Respaldo: data/*.csv mismo origen (si la lectura en vivo falla)
-  if(!remotos.length && e.mov){
+
+  // 1) Inicializar Firebase y escuchar en tiempo real
+  initFirebase();
+  if(db && e.live!==false){
     try{
-      const txt=await fetchCSV(bust(e.mov));
-      if(txt){
-        const remote=rowsToObj(repararFormatosVE(parseCSV(txt)));
-        remotos=mapearRemotos(remote);
-        fuente='csv';
-        LOAD_STATUS += ' | csv='+remotos.length;
-      } else { LOAD_STATUS += ' | CSV vacío'; }
-    }catch(e1){ LOAD_STATUS += ' | csv ERROR: '+e1.message; }
-  } else if(!remotos.length){
+      startLiveListener((remote) => {
+        if(remote && remote.length){
+          const newMovs = remote.map(m=>({
+            id:'fb-'+m.id, fecha:m.fecha||m.fecha, fondo:m.fondo||'General', cuenta:m.codigo_cuenta||m.cuenta||'',
+            moneda:m.moneda||'USD', tipo:m.tipo_movimiento||m.tipo||'Ingreso',
+            monto:Math.abs(numVE(m.monto)), concepto:m.concepto||'',
+            evento:m.evento||'', agremiado:m.agremiado||'', soporte:m.soporte||'', enviado:true
+          }));
+          const localIds=new Set(movs.map(m=>m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta));
+          const remoteSet=new Set(newMovs.map(r=>r.fecha+'|'+r.concepto+'|'+r.monto+'|'+r.cuenta));
+          movs.forEach(m=>{ m.enviado=remoteSet.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta); });
+          movs=movs.concat(newMovs.filter(m=>!localIds.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta)));
+          persist();
+          runAudit();
+          if(lastAudit && lastAudit.eliminados.length && !document.body.classList.contains('pub-mode')){
+            toast('⚠ Auditoría: '+lastAudit.eliminados.length+' movimiento(s) eliminado(s) o modificado(s) en la BD','e');
+          }
+          renderAll();
+        }
+      });
+      fuente='firestore-live';
+      LOAD_STATUS += ' | conectado';
+    }catch(e0){ LOAD_STATUS += ' | live ERROR: '+e0.message; }
+  }
+
+  // 2) Respaldo: datos locales (localStorage / seed CSV)
+  if(!movs.length){
+    try{
+      const seed=JSON.parse(lsGet('promuf_movs_seed')||'[]');
+      if(seed && seed.length){
+        movs=seed; persist(); fuente=fuente||'seed';
+        LOAD_STATUS += ' | seed='+movs.length;
+      }
+    }catch(e1){ LOAD_STATUS += ' | sin seed'; }
+  }
+
+  if(!movs.length && !fuente){
     LOAD_STATUS += ' | sin fuente';
   }
-  // merge con borradores locales
-  if(remotos.length){
-    const localIds=new Set(movs.map(m=>m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta));
-    const remoteSet=new Set(remotos.map(r=>r.fecha+'|'+r.concepto+'|'+r.monto+'|'+r.cuenta));
-    movs.forEach(m=>{ m.enviado=remoteSet.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta); });
-    movs=movs.concat(remotos.filter(m=>!localIds.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta)));
-    persist();
-    runAudit();
-    if(lastAudit && lastAudit.eliminados.length && !document.body.classList.contains('pub-mode')){
-      toast('⚠ Auditoría: '+lastAudit.eliminados.length+' movimiento(s) eliminado(s) o modificado(s) en la hoja','e');
-    }
-  }
+
   console.log('[tesoreria] '+LOAD_STATUS+(fuente?' ['+fuente+']':''));
   renderAll();
 }
-function renderAll(){ renderResumen(); renderMov(); renderFondos(); renderConc(); renderAudit(); }
+
+/* ═══════════════ CARGA DE CONFIG REMOTA ═══════════════ */
+async function loadConfigJson(){
+  try{
+    const r = await fetch(bust('../../config.json'));
+    if(r.ok){
+      const j = await r.json();
+      cfgRemote = {
+        firebase: j.firebase||null,
+        live: j.live===true
+      };
+      cfg = {...cfgRemote, ...cfg};
+      lsSet('promuf_cfg', JSON.stringify(cfg));
+    }
+  }catch(e){ cfgRemote = null; }
+}
 
 /* ═══════════════ AUDITORÍA DE INTEGRIDAD ═══════════════ */
 let snap=null;
@@ -815,13 +808,13 @@ function renderAudit(){
     ? '<div class="note" style="text-align:center;padding:16px">Aún no hay línea base. Pulsa "✔ Establecer esta línea base" para activar la vigilancia.</div>'
     : `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
          <span class="badge ${anom?'b-red':'b-green'}" style="font-size:.8rem;padding:6px 12px">${anom?'⚠ CAMBIOS DETECTADOS':'✔ SIN CAMBIOS ANÓMALOS'}</span>
-         <span class="note">Línea base: ${new Date(snap.fecha).toLocaleString('es-VE')} · ${snap.movs.length} movimientos en la hoja</span>
+         <span class="note">Línea base: ${new Date(snap.fecha).toLocaleString('es-VE')} · ${snap.movs.length} movimientos en la BD</span>
        </div>`;
   if(!a || (a.eliminados.length+a.nuevos.length+a.modificados.length)===0){
     $('auditChanges').innerHTML='<div class="note" style="text-align:center;padding:14px">No hay cambios desde la última línea base.</div>';
     return;
   }
-  const mk=h=>`<h4 style="margin:12px 0 6px;font-size:.8rem;color:var(--${h})">${h==='ro'?'Eliminados de la hoja':h==='gr'?'Nuevos (agregados a la hoja)':'Montos o campos modificados'}</h4>`+
+  const mk=h=>`<h4 style="margin:12px 0 6px;font-size:.8rem;color:var(--${h})">${h==='ro'?'Eliminados de la BD':h==='gr'?'Nuevos (agregados a la BD)':'Montos o campos modificados'}</h4>`+
     (h==='ro'?a.eliminados:h==='gr'?a.nuevos:a.modificados.map(x=>x.antes)).map(f=>`<div class="mi"><div><div class="mn">${descFila(f)}</div><div class="md">${h==='am'?`antes ${f.split('|')[4]} → ahora ${a.modificados.find(x=>x.antes===f).ahora.split('|')[4]}`:''}</div></div></div>`).join('');
   $('auditChanges').innerHTML=
     (a.modificados.length?mk('am'):'')+
@@ -829,7 +822,7 @@ function renderAudit(){
     (a.nuevos.length?mk('gr'):'');
 }
 function resetBaseline(){
-  if(!confirm('¿Fijar los movimientos actuales de la hoja como línea base de auditoría? (Los cambios legítimos dejarán de marcarse)' )) return;
+  if(!confirm('¿Fijar los movimientos actuales de la BD como línea base de auditoría? (Los cambios legítimos dejarán de marcarse)' )) return;
   takeSnapshot(); renderAudit(); toast('Línea base de auditoría establecida','s');
 }
 

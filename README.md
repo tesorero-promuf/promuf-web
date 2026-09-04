@@ -1,7 +1,6 @@
 # Sistema Gremial PROMUF 🎵
 
-Portal único de la **Asociación Civil de Profesionales de la Música del Estado Falcón (PROMUF)**.
-Un solo enlace para los agremiados: tesorería transparente, carnet digital y los módulos de gestión que vayan naciendo.
+Portal único de la **Asociación Civil de Profesionales de la Música del Estado Falcón (PROMUF)**. Un solo enlace para los agremiados: tesorería transparente, carnet digital y los módulos de gestión que vayan naciendo.
 
 **URL pública:** `https://tesorero-promuf.github.io/promuf-web/`
 
@@ -15,14 +14,16 @@ promuf-web/
 ├── css/estilos.css       Sistema de diseño compartido (variables PROMUF)
 ├── js/shell.js           Router por hash + render de Inicio + carga de módulos
 ├── modulos.json          REGISTRO de módulos → la navegación se genera sola
-├── config.json           Config central: URLs de hojas, API, token y avisos
+├── config.json           Config central: Firebase, avisos
+├── data/                 Datos CSV de respaldo (movimientos, fondos, conciliación)
+├── scripts/sync_data.mjs Sincronización con Firebase Firestore
 ├── docs/                 Documentos oficiales (acta y reglamentos en PDF)
 └── modulos/              Cada módulo es una carpeta autocontenida
     ├── inicio/           (lo renderiza el shell, no es un iframe)
     └── tesoreria/        Dashboard de Tesorería y Transparencia
 ```
 
-- **Todo el sistema es estático** (GitHub Pages) y los datos viven en **Google Sheets** + **Apps Script**.
+- **Todo el sistema es estático** (GitHub Pages) y los datos viven en **Firebase Firestore**.
 - **`modulos.json` es el corazón escalable**: agregar un módulo nuevo = crear su carpeta + agregar una línea aquí. La navegación, el Inicio y los enlaces se generan automáticamente.
 - Cada módulo es **autocontenido** (HTML + CSS + JS propio) y se carga en un iframe del shell con auto-alto; usa las variables del design system (`css/estilos.css`) para mantener la identidad visual.
 
@@ -41,9 +42,9 @@ Acceso: los módulos listos se abren en `#/<id>` (ej. `#/tesoreria`). El módulo
 
 ## Config central (`config.json`)
 
+- `firebase`: configuración del proyecto **Firebase** (projectId, credenciales).
 - `avisos`: anuncios editables **sin tocar código** (tipos: `aviso`, `novedad`, `importante`, `evento`). Se muestran en el Inicio (máx. 5, los más recientes).
-- `mov` / `fondos` / `conc`: URLs publicadas (CSV) de las pestañas de la hoja.
-- `api` / `api_token`: API Apps Script de la tesorería y su token de blindaje.
+- `live`: activa/desactiva la escucha en tiempo real de Firestore.
 
 ## Acceso público vs privado
 
@@ -59,5 +60,5 @@ Acceso: los módulos listos se abren en `#/<id>` (ej. `#/tesoreria`). El módulo
 ## Seguridad
 
 - Rama `main` protegida: todo cambio pasa por Pull Request (sin push directo ni force-push).
-- API con token de acceso + validación de campos; la hoja conserva historial de versiones.
-- Módulo de Tesorería con **Auditoría de integridad**: detecta eliminaciones o modificaciones en la hoja entre cargas.
+- Firestore con reglas de acceso; datos blindados con autenticación.
+- Módulo de Tesorería con **Auditoría de integridad**: detecta eliminaciones o modificaciones en la base de datos entre cargas.

@@ -1,8 +1,8 @@
-name: Sync datos hoja -> data/
+name: Sync datos Firebase -> data/
 on:
   schedule:
-    - cron: '17 * * * *'        # cada hora (minuto 17 para evitar picos)
-  workflow_dispatch:            # ejecutar manualmente desde Actions
+    - cron: '17 * * * *'
+  workflow_dispatch:
 permissions:
   contents: write
   pull-requests: write
@@ -14,23 +14,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Descargar datos de la hoja
-        run: node scripts/sync_data.mjs
-      - name: Abrir PR si hay cambios
+      - name: Instalar dependencias
+        run: npm install
+      - name: Sembrar datos en Firestore
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          BRANCH="sync-data-latest"
-          git switch -c "$BRANCH"
-          git add data
-          if git diff --cached --quiet; then
-            echo "Sin cambios en data/"
-            exit 0
-          fi
-          git commit -m "Auto-sync datos desde la hoja ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
-          git push origin --delete "$BRANCH" || true
-          git push -u origin "$BRANCH"
-          gh pr create --base main --head "$BRANCH" --title "Auto-sync datos desde la hoja" --body "Sincronizacion automatica de data/ desde Google Sheets (corre via PR para respetar la proteccion de main)." || true
-          gh pr merge --merge --head "$BRANCH" || echo "No se pudo mergear automaticamente; requiere revision manual en GitHub."
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
+        run: node scripts/sync_data.mjs
