@@ -115,6 +115,7 @@
   .tbl-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .pager{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;flex-wrap:wrap}
   .pager-info{color:var(--tx2);font-size:.74rem}
+  .pager-top{margin-left:8px}
   @media(max-width:640px){.hd{padding:10px 14px}.tab{padding:9px 11px;font-size:.75rem}.tc{padding:14px}.sg{grid-template-columns:repeat(2,1fr)}.sc .sn{font-size:1.15rem}.bl{width:100px!important}.cs{padding:14px;overflow-x:auto}.tbl{min-width:620px}.row2{grid-template-columns:1fr 1fr}.fb{align-items:stretch}.fb .in{max-width:none!important;flex:1 1 160px}.hd .sub{max-width:62vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#fondosTbl,#concTbl,#planTbl{min-width:620px}}
   @media(max-width:420px){.sg{grid-template-columns:1fr 1fr;gap:8px}.sc{padding:12px 9px}.sc .sn{font-size:1rem}.sc .sl{font-size:.63rem}.row2{grid-template-columns:1fr}.btn{width:100%;justify-content:center}.tt{left:12px;right:12px}.t{text-align:center}}
 </style>
@@ -705,9 +706,9 @@ function renderMov(){
   const totalPages=Math.max(1,Math.ceil(rows.length/MOVS_POR_PAGINA));
   movPage=Math.min(Math.max(1,movPage),totalPages);
   const pageRows=rows.slice((movPage-1)*MOVS_POR_PAGINA,movPage*MOVS_POR_PAGINA);
-  $('movPager').innerHTML=totalPages>1
+  $('movPager').innerHTML=(totalPages>1
     ? `<button class="btn bs" onclick="setMovPage(${movPage-1})" ${movPage===1?'disabled':''}>‹ Anterior</button><span class="pager-info">Página ${movPage} de ${totalPages}</span><button class="btn bs" onclick="setMovPage(${movPage+1})" ${movPage===totalPages?'disabled':''}>Siguiente ›</button>`
-    : '';
+    : '')+`<button class="btn bs bo pager-top" onclick="volverArriba()" title="Volver arriba" aria-label="Volver arriba">↑ Arriba</button>`;
   const drafts=movs.filter(m=>!m.enviado).length;
   const lb=$('btnLimpiar');
   if(lb){ lb.style.display=drafts?'':'none'; lb.textContent='🗑 Limpiar local ('+drafts+' borrador'+(drafts===1?'':'es')+')'; }
@@ -732,6 +733,9 @@ function renderMov(){
 function setMovPage(page){
   movPage=Math.max(1,page);
   renderMov();
+}
+function volverArriba(){
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 function populateMovFilters(){
   const cuentas=[...new Set(movs.map(m=>m.cuenta))].sort();
