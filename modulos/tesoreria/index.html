@@ -801,9 +801,10 @@ async function loadSheets(){
 /* ═══════════════ CARGA DE CONFIG REMOTA ═══════════════ */
 async function loadConfigJson(){
   try{
-    const r = await fetch(bust('../../config.json'));
+    const r = await fetch('../../config.json?v=' + Date.now());
     if(r.ok){
-      const j = await r.json();
+      const txt = await r.text();
+      const j = JSON.parse(txt.charCodeAt(0)===0xFEFF ? txt.slice(1) : txt);
       cfgRemote = {
         firebase: j.firebase||null,
         live: j.live===true
