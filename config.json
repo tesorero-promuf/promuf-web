@@ -1,12 +1,23 @@
-{
-  "avisos": [
-    {"fecha": "2026-08-20", "tipo": "importante", "texto": "El gremio se encuentra en espera del registro del Acta Constitutiva. La operación formal comienza en cuanto se oficialice el registro."},
-    {"fecha": "2026-08-20", "tipo": "novedad", "texto": "Bienvenidos al nuevo Sistema Gremial PROMUF: un solo lugar para la tesorería, el carnet digital y más módulos."}
-  ],
-  "mov": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQxhyBk_6vnEZnkGqpyEoV7hhroRq_LxpNTBizH4297eZXmuZCcW-eLPwZccxFboh6X7SjN8OdRicB6/pub?gid=973272967&single=true",
-  "fondos": "../../data/fondos.csv",
-  "conc": "../../data/conciliacion.csv",
-  "api": "https://script.google.com/macros/s/AKfycbwaJ5qEiS8flOWRS-MqSvnIbNyClbT70sL8LjpvPwt0hTE13-EWlEfzW80igiQsCpqx/exec",
-  "api_token": "pf-6c7f9c2a12b0dd6c95ca6ec8ba7306a4",
-  "live": true
+﻿{
+    "firebase": {
+        "apiKey": "AizaSyAWDKG9vockbTRKH2ejctf0-S-5LE8o-4Y",
+        "authDomain": "promuf-bd.firebaseapp.com",
+        "projectId": "promuf-bd",
+        "storageBucket": "promuf-bd.appspot.com",
+        "messagingSenderId": "155606043790",
+        "appId": "1:155606043790:web:9304274d51d5c09c5e8ddf"
+    },
+    "avisos": [
+        {
+            "fecha": "2026-08-20",
+            "tipo": "importante",
+            "texto": "El gremio se encuentra en espera del registro del Acta Constitutiva. La operaci\u00f3n formal comienza en cuanto se oficialice el registro."
+        },
+        {
+            "fecha": "2026-08-20",
+            "tipo": "novedad",
+            "texto": "Bienvenidos al nuevo Sistema Gremial PROMUF: un solo lugar para la tesorer\u00eda, el carnet digital y m\u00e1s m\u00f3dulos."
+        }
+    ],
+    "live": true
 }
