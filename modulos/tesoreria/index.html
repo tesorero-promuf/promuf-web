@@ -213,6 +213,20 @@
   </div>
   <div class="cs">
     <h3>Movimientos <span class="tag" id="movCount"></span></h3>
+    <div class="fb">
+      <input class="in" id="movFecha" type="date" style="max-width:160px" oninput="renderMov()" placeholder="Fecha">
+      <input class="in" id="movConcepto" placeholder="🔍 Concepto…" style="max-width:200px" oninput="renderMov()">
+      <select class="in" id="movCuenta" onchange="renderMov()" style="max-width:220px">
+        <option value="">Cuenta: Todas</option>
+      </select>
+      <select class="in" id="movFondo" onchange="renderMov()" style="max-width:180px">
+        <option value="">Fondo: Todos</option>
+      </select>
+      <select class="in" id="movMoneda" onchange="renderMov()" style="max-width:120px">
+        <option value="">Moneda: Todas</option>
+        <option>Bs</option><option>USD</option><option>USDT</option>
+      </select>
+    </div>
     <div class="tbl-wrap" id="movTbl"></div>
   </div>
 </div>
@@ -383,7 +397,7 @@ function numVE(s){
   const n=Number(s);
   return isNaN(n)?0:n;
 }
-function renderAll(){ renderResumen(); renderMov(); renderFondos(); renderConc(); renderAudit(); }
+function renderAll(){ renderResumen(); renderMov(); populateMovFilters(); renderFondos(); renderConc(); renderAudit(); }
 
 function copyText(t){
   const ok=()=>toast('Enlace copiado al portapapeles','s');
@@ -619,9 +633,20 @@ function addMov(){
   $('mMonto').value=''; $('mConcepto').value='';
 }
 
-function persist(){ lsSet('promuf_movs', JSON.stringify(movs)); }
 function renderMov(){
-  const rows=[...movs].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const fFecha=$('movFecha')?.value||'';
+  const fConcepto=$('movConcepto')?.value?.toLowerCase()||'';
+  const fCuenta=$('movCuenta')?.value||'';
+  const fFondo=$('movFondo')?.value||'';
+  const fMoneda=$('movMoneda')?.value||'';
+  const rows=[...movs].filter(m=>{
+    if(fFecha&&m.fecha!==fFecha)return false;
+    if(fConcepto&&!(m.concepto||'').toLowerCase().includes(fConcepto))return false;
+    if(fCuenta&&m.cuenta!==fCuenta)return false;
+    if(fFondo&&m.fondo!==fFondo)return false;
+    if(fMoneda&&m.moneda!==fMoneda)return false;
+    return true;
+  }).sort((a,b)=>b.fecha.localeCompare(a.fecha));
   $('movCount').textContent=rows.length+' registros';
   const drafts=movs.filter(m=>!m.enviado).length;
   const lb=$('btnLimpiar');
@@ -642,6 +667,15 @@ function renderMov(){
         ? '<td><span class="badge b-green" title="Ya está en la base de datos; no se puede eliminar">🔒 BD</span></td>'
         : `<td><button class="btn bs br" onclick="delMov('${m.id}')" title="Borrador local no enviado">✕</button></td>`)}
     </tr>`).join('')+'</table>'     : '<div class="note" style="text-align:center;padding:14px">Sin movimientos registrados.<div style="font-size:.7rem;opacity:.7;margin-top:6px">debug: '+LOAD_STATUS+'</div></div>';
+}
+function populateMovFilters(){
+  const cuentas=[...new Set(movs.map(m=>m.cuenta))].sort();
+  const fondos=[...new Set(movs.map(m=>m.fondo))].sort();
+  const monedas=[...new Set(movs.map(m=>m.moneda))].sort();
+  const selCuenta=$('movCuenta'), selFondo=$('movFondo'), selMoneda=$('movMoneda');
+  if(selCuenta) selCuenta.innerHTML='<option value="">Cuenta: Todas</option>'+cuentas.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(selFondo) selFondo.innerHTML='<option value="">Fondo: Todos</option>'+fondos.map(f=>`<option value="${f}">${NOM_FONDO[f]||f}</option>`).join('');
+  if(selMoneda) selMoneda.innerHTML='<option value="">Moneda: Todas</option>'+monedas.map(m=>`<option value="${m}">${m}</option>`).join('');
 }
 function delMov(id){
   const m=movs.find(x=>x.id===id);
