@@ -501,7 +501,8 @@ function startLiveListener(callback){
         callback(docs);
       }, (error) => {
         console.error('[Firestore listener error]', error);
-        callback([]);
+        LOAD_STATUS += ' | live ERROR: '+error.message;
+        renderAll();
       });
   }catch(e){ callback([]); }
 }
@@ -831,24 +832,23 @@ async function loadSheets(){
   if(db && e.live!==false){
     try{
       startLiveListener((remote) => {
-        if(remote && remote.length){
-          const newMovs = remote.map(m=>({
-            id:'fb-'+m.id, fecha:m.fecha||m.fecha, fondo:m.fondo||'General', cuenta:m.codigo_cuenta||m.cuenta||'',
-            moneda:m.moneda||'USD', tipo:m.tipo_movimiento||m.tipo||'Ingreso',
-            monto:Math.abs(numVE(m.monto)), concepto:m.concepto||'',
-            evento:m.evento||'', agremiado:m.agremiado||'', soporte:m.soporte||'', enviado:true
-          }));
-          const localIds=new Set(movs.map(m=>m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta));
-          const remoteSet=new Set(newMovs.map(r=>r.fecha+'|'+r.concepto+'|'+r.monto+'|'+r.cuenta));
-          movs.forEach(m=>{ m.enviado=remoteSet.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta); });
-          movs=movs.concat(newMovs.filter(m=>!localIds.has(m.fecha+'|'+m.concepto+'|'+m.monto+'|'+m.cuenta)));
-          persist();
-          runAudit();
-          if(lastAudit && lastAudit.eliminados.length && !document.body.classList.contains('pub-mode')){
-            toast('⚠ Auditoría: '+lastAudit.eliminados.length+' movimiento(s) eliminado(s) o modificado(s) en la BD','e');
-          }
-          renderAll();
+        const newMovs = remote.map(m=>({
+          id:'fb-'+m.id, fecha:m.fecha||'', fondo:m.fondo||'General', cuenta:m.codigo_cuenta||m.cuenta||'',
+          moneda:m.moneda||'USD', tipo:m.tipo_movimiento||m.tipo||'Ingreso',
+          monto:Math.abs(numVE(m.monto)), concepto:m.concepto||'',
+          evento:m.evento||'', agremiado:m.agremiado||'', soporte:m.soporte||'', enviado:true
+        }));
+        const key = m => [m.fecha,m.concepto,m.monto,m.cuenta].join('|');
+        const remoteKeys = new Set(newMovs.map(key));
+        const pendientes = movs.filter(m=>!m.enviado && !remoteKeys.has(key(m)));
+        // Firestore is authoritative: replace sent records so edits and deletions arrive in the UI.
+        movs = newMovs.concat(pendientes);
+        persist();
+        runAudit();
+        if(lastAudit && lastAudit.eliminados.length && !document.body.classList.contains('pub-mode')){
+          toast('⚠ Auditoría: '+lastAudit.eliminados.length+' movimiento(s) eliminado(s) o modificado(s) en la BD','e');
         }
+        renderAll();
       });
       fuente='firestore-live';
       LOAD_STATUS += ' | conectado';
