@@ -107,6 +107,8 @@
   body.pub-mode .hd{display:none}
   body.pub-mode #movFormWrap{display:none}
   body.pub-mode .no-pub{display:none!important}
+  #movPubExport{display:none}
+  body.pub-mode #movPubExport{display:flex}
   .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:.74rem}
   .bar-row .bl{width:150px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .bar-row .bw{flex:1;height:18px;background:var(--bg);border-radius:5px;overflow:hidden}
@@ -122,6 +124,9 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 </head>
 <body>
@@ -229,6 +234,18 @@
         <option value="">Moneda: Todas</option>
         <option>Bs</option><option>USD</option><option>USDT</option>
       </select>
+      <select class="in" id="movTipo" onchange="renderMov()" style="max-width:140px">
+        <option value="">Tipo: Todos</option>
+        <option value="Ingreso">Ingresos</option>
+        <option value="Egreso">Egresos</option>
+      </select>
+    </div>
+    <div class="fb no-pub">
+      <button class="btn bs bo" onclick="exportMovPDF()">📄 Exportar PDF</button>
+      <button class="btn bs bo" onclick="exportMovExcel()">📊 Exportar Excel</button>
+    </div>
+    <div class="fb" id="movPubExport">
+      <button class="btn bs bo" onclick="exportMovPDF()">📄 Exportar PDF</button>
     </div>
     <div class="tbl-wrap" id="movTbl"></div>
     <div class="pager" id="movPager"></div>
@@ -690,19 +707,7 @@ function addMov(){
 
 function renderMov(){
   try{
-  const fFecha=$('movFecha')?.value||'';
-  const fConcepto=$('movConcepto')?.value?.toLowerCase()||'';
-  const fCuenta=$('movCuenta')?.value||'';
-  const fFondo=$('movFondo')?.value||'';
-  const fMoneda=$('movMoneda')?.value||'';
-  const rows=[...movs].filter(m=>{
-    if(fFecha&&m.fecha!==fFecha)return false;
-    if(fConcepto&&!(m.concepto||'').toLowerCase().includes(fConcepto))return false;
-    if(fCuenta&&m.cuenta!==fCuenta)return false;
-    if(fFondo&&m.fondo!==fFondo)return false;
-    if(fMoneda&&m.moneda!==fMoneda)return false;
-    return true;
-  }).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const rows=getFilteredMovs();
   $('movCount').textContent=rows.length+' registros';
   const totalPages=Math.max(1,Math.ceil(rows.length/MOVS_POR_PAGINA));
   movPage=Math.min(Math.max(1,movPage),totalPages);
@@ -730,6 +735,55 @@ function renderMov(){
         : `<td><button class="btn bs br" onclick="delMov('${m.id}')" title="Borrador local no enviado">✕</button></td>`)}
     </tr>`).join('')+'</table>'     : '<div class="note" style="text-align:center;padding:14px">Sin movimientos registrados.<div style="font-size:.7rem;opacity:.7;margin-top:6px">debug: '+LOAD_STATUS+'</div></div>';
   }catch(e){ console.error('[renderMov]',e); }
+}
+function getFilteredMovs(){
+  const fFecha=$('movFecha')?.value||'';
+  const fConcepto=$('movConcepto')?.value?.toLowerCase()||'';
+  const fCuenta=$('movCuenta')?.value||'';
+  const fFondo=$('movFondo')?.value||'';
+  const fMoneda=$('movMoneda')?.value||'';
+  const fTipo=$('movTipo')?.value||'';
+  return [...movs].filter(m=>{
+    if(fFecha&&m.fecha!==fFecha)return false;
+    if(fConcepto&&!(m.concepto||'').toLowerCase().includes(fConcepto))return false;
+    if(fCuenta&&m.cuenta!==fCuenta)return false;
+    if(fFondo&&m.fondo!==fFondo)return false;
+    if(fMoneda&&m.moneda!==fMoneda)return false;
+    if(fTipo&&m.tipo!==fTipo)return false;
+    return true;
+  }).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+}
+function exportMovPDF(){
+  const rows=getFilteredMovs();
+  if(!rows.length){ toast('No hay movimientos para exportar','i'); return; }
+  if(!window.jspdf?.jsPDF){ toast('No se pudo cargar el exportador PDF','e'); return; }
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  doc.setFontSize(14); doc.text('Movimientos financieros PROMUF',14,14);
+  doc.setFontSize(8); doc.text('Generado: '+new Date().toLocaleString('es-VE'),14,20);
+  doc.autoTable({
+    startY:25,
+    head:[['Fecha','Tipo','Concepto','Cuenta','Fondo','Moneda','Monto']],
+    body:rows.map(m=>[m.fecha,m.tipo,m.concepto,m.cuenta,NOM_FONDO[m.fondo]||m.fondo,m.moneda,(m.tipo==='Egreso'?'−':'＋')+' '+fmt(m.monto)]),
+    styles:{fontSize:8,cellPadding:2},
+    headStyles:{fillColor:[18,41,79]}
+  });
+  doc.save('movimientos-promuf.pdf');
+}
+function exportMovExcel(){
+  if(document.body.classList.contains('pub-mode')) return;
+  const rows=getFilteredMovs();
+  if(!rows.length){ toast('No hay movimientos para exportar','i'); return; }
+  if(!window.XLSX){ toast('No se pudo cargar el exportador Excel','e'); return; }
+  const data=rows.map(m=>({
+    Fecha:m.fecha, Tipo:m.tipo, Concepto:m.concepto, Cuenta:m.cuenta,
+    Fondo:NOM_FONDO[m.fondo]||m.fondo, Moneda:m.moneda, Monto:Number(m.monto||0),
+    Evento:m.evento||'', Agremiado:m.agremiado||'', Soporte:m.soporte||''
+  }));
+  const ws=XLSX.utils.json_to_sheet(data);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Movimientos');
+  XLSX.writeFile(wb,'movimientos-promuf.xlsx');
 }
 function setMovPage(page){
   movPage=Math.max(1,page);
