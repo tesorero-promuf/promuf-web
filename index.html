@@ -1025,7 +1025,7 @@ async function loadSheets(){
 /* ═══════════════ CARGA DE CONFIG REMOTA ═══════════════ */
 async function loadConfigJson(){
   try{
-    const r = await fetch('../../config.json?v=' + Date.now());
+    const r = await fetch('config.json?v=' + Date.now());
     if(r.ok){
       const txt = await r.text();
       const j = JSON.parse(txt.charCodeAt(0)===0xFEFF ? txt.slice(1) : txt);
