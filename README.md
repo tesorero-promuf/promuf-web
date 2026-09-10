@@ -60,5 +60,16 @@ Acceso: los módulos listos se abren en `#/<id>` (ej. `#/tesoreria`). El módulo
 ## Seguridad
 
 - Rama `main` protegida: todo cambio pasa por Pull Request (sin push directo ni force-push).
-- Firestore con reglas de acceso; datos blindados con autenticación.
+- **Firestore con reglas reales** (`firestore.rules` en la raíz): lectura pública (transparencia), escritura solo para el Tesorero autenticado. Antes solo estaban las reglas de prueba por defecto de Firebase (abiertas a cualquiera y con fecha de expiración) — quedaron reemplazadas.
+- **Autenticación real con Firebase Auth**: el módulo de Tesorería ya no distingue "público" de "administrativo" por un parámetro de la URL (`?priv=1` era solo una capa visual, no una protección). Ahora arranca siempre en modo público de solo lectura y solo se desbloquea la vista administrativa con una sesión válida de Firebase Auth, verificada además del lado del servidor por las reglas de Firestore.
 - Módulo de Tesorería con **Auditoría de integridad**: detecta eliminaciones o modificaciones en la base de datos entre cargas.
+
+### Puesta en marcha del acceso del Tesorero (una sola vez, desde la consola de Firebase)
+
+1. **Habilitar el método de acceso** — Firebase Console → *Authentication* → *Sign-in method* → activa **Correo electrónico/contraseña**. Desactiva el auto-registro público si aparece esa opción; las cuentas se crean a mano.
+2. **Crear la cuenta del Tesorero** — *Authentication* → *Users* → *Add user*, con el correo y una contraseña fuerte. Copia el **UID** que se genera.
+3. **Autorizar ese UID como admin** — *Firestore Database* → crea la colección `admins` → documento con **ID = el UID copiado** → cualquier campo, p. ej. `{ rol: "tesorero" }`.
+4. **Publicar las reglas** — *Firestore Database* → *Rules* → pega el contenido de `firestore.rules` de este repo → *Publish*. Debe hacerse **antes del 4 de octubre de 2026**, fecha en la que expiran las reglas de prueba actuales y Firestore empezará a rechazar todas las peticiones (lectura incluida).
+5. En el sitio, entra a `#/tesoreria` y usa el botón **🔑 Iniciar sesión (Tesorero)** con ese correo y contraseña.
+
+Si alguien inicia sesión con una cuenta que no está en `admins`, la sesión es válida pero Firestore rechazará cualquier escritura (permission-denied): la protección real vive en las reglas, no en la interfaz.
