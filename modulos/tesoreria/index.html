@@ -104,7 +104,6 @@
   .stat .sl2{font-size:.66rem;color:var(--tx2);text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
   #pubBanner{display:none;background:rgba(167,139,250,.15);color:#c4b5fd;text-align:center;padding:8px 14px;font-size:.74rem;font-weight:600;border-bottom:1px solid var(--bd)}
   body.pub-mode #pubBanner{display:block}
-  body.pub-mode .hd{display:none}
   body.pub-mode #movFormWrap{display:none}
   body.pub-mode .no-pub{display:none!important}
   #movPubExport{display:none}
@@ -124,6 +123,7 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -133,6 +133,9 @@
 
 <div class="hd">
   <div class="hd-r">
+    <span class="note no-pub" id="sesionInfo" style="margin:0"></span>
+    <button class="btn bo" id="btnLogin" onclick="openLogin()" style="display:none">🔑 Iniciar sesión (Tesorero)</button>
+    <button class="btn bo no-pub" id="btnLogout" onclick="doLogout()" style="display:none">🚪 Cerrar sesión</button>
     <button class="btn bo no-pub" onclick="openConfig()">⚙ Config</button>
   </div>
 </div>
@@ -308,6 +311,24 @@
   </div>
 </div>
 
+<!-- ═══════════ MODAL LOGIN (TESORERO) ═══════════ -->
+<div class="mo" id="moLogin">
+  <div class="ml2" style="max-width:380px">
+    <button class="mx" onclick="closeLogin()">✕</button>
+    <h2>🔑 Acceso del Tesorero</h2>
+    <div class="note" style="margin-bottom:14px">
+      Esta sección es exclusiva para el Tesorero. El resto del gremio consulta la versión pública de solo lectura.
+    </div>
+    <div class="fg2"><label>Correo</label><input class="in" id="loginEmail" type="email" placeholder="tesorero@promuf.org" autocomplete="username"></div>
+    <div class="fg2"><label>Contraseña</label><input class="in" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="note" id="loginError" style="color:var(--ro);min-height:16px"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn bt" id="btnLoginSubmit" onclick="doLogin()">Entrar</button>
+      <button class="btn bo" onclick="closeLogin()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════ MODAL CONFIG ═══════════ -->
 <div class="mo" id="moConfig">
   <div class="ml2">
@@ -319,10 +340,7 @@
     <div class="fg2"><label>ID del proyecto Firebase</label><input class="in" id="cfgProjectId" placeholder="tesorero-bd"></div>
     <div class="note" style="margin-top:8px">
       Para configurar: crea un proyecto en <b>console.firebase.google.com</b>, activa Firestore, agrega una app web y copia las credenciales a <code>config.json</code>.<br><br>
-      <b>Reglas de Firestore sugeridas</b> (ajustables en la consola de Firebase):<br>
-      <code>match /movimientos/{doc} { allow read: if true; allow write: if request.auth != null; }</code><br>
-      <code>match /fondos/{doc} { allow read: if true; allow write: if request.auth != null; }</code><br>
-      <code>match /conciliacion/{doc} { allow read: if true; allow write: if request.auth != null; }</code>
+      <b>Seguridad:</b> las reglas reales viven en <code>firestore.rules</code> (raíz del repo) y ya no aceptan escrituras de cualquiera. Solo puede escribir un usuario autenticado con Firebase Auth cuyo UID exista en la colección <code>admins</code>. Inicia sesión con el botón 🔑 del encabezado; si tu cuenta no está en <code>admins</code>, las escrituras serán rechazadas aunque la sesión sea válida.
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn bt" onclick="saveConfig()">Guardar y conectar</button>
@@ -413,13 +431,85 @@ function saveConfig(){
 /* ═══════════════ MODO PÚBLICO Y COMPARTIR ═══════════════ */
 let cfgRemote = null;
 let LOAD_STATUS = '';
+/* Seguro por defecto: SIEMPRE arrancamos en modo público (solo lectura).
+   El modo administrativo ya no se activa por un parámetro de la URL —
+   se activa únicamente cuando Firebase Auth confirma una sesión real
+   del Tesorero (ver attachAuthListener). ?priv=1 solo abre el diálogo
+   de inicio de sesión como atajo de conveniencia. */
 function readQuery(){
+  document.body.classList.add('pub-mode');
   try{
     const p=new URLSearchParams(location.search);
-    if(p.get('pub')==='1'){ document.body.classList.add('pub-mode'); go('resumen'); }
+    if(p.get('priv')==='1'){ setTimeout(openLogin, 300); }
   }catch(e){}
 }
 function effCfg(){ return cfg; }
+
+/* ═══════════════ AUTENTICACIÓN (TESORERO) ═══════════════ */
+let authListenerAttached = false;
+function openLogin(){
+  $('loginError').textContent='';
+  $('loginPass').value='';
+  $('moLogin').classList.add('on');
+  $('loginEmail').focus();
+}
+function closeLogin(){ $('moLogin').classList.remove('on'); }
+
+function attachAuthListener(){
+  if(authListenerAttached) return;
+  if(!(firebase.apps && firebase.apps.length)) return; // esperar a initFirebase()
+  authListenerAttached = true;
+  firebase.auth().onAuthStateChanged(user=>{
+    if(user){
+      document.body.classList.remove('pub-mode');
+      $('btnLogin').style.display='none';
+      $('btnLogout').style.display='';
+      $('sesionInfo').textContent = '👤 '+(user.email||'sesión activa');
+      closeLogin();
+      toast('Sesión iniciada como '+(user.email||'Tesorero'),'s');
+    } else {
+      document.body.classList.add('pub-mode');
+      $('btnLogin').style.display='';
+      $('btnLogout').style.display='none';
+      $('sesionInfo').textContent='';
+    }
+    go(document.querySelector('.tab.on')?.dataset.t || 'resumen');
+    renderAll();
+  }, err=>{
+    console.error('[Auth] onAuthStateChanged error', err);
+  });
+}
+
+async function doLogin(){
+  const email = $('loginEmail').value.trim();
+  const pass = $('loginPass').value;
+  $('loginError').textContent='';
+  if(!email || !pass){ $('loginError').textContent='Indica correo y contraseña.'; return; }
+  if(!(firebase.apps && firebase.apps.length)){ initFirebase(); attachAuthListener(); }
+  const btn = $('btnLoginSubmit');
+  btn.disabled = true; btn.textContent='Entrando…';
+  try{
+    await firebase.auth().signInWithEmailAndPassword(email, pass);
+    // onAuthStateChanged se encarga de cerrar el modal y refrescar la UI
+  }catch(e){
+    const msg = {
+      'auth/invalid-email': 'Correo inválido.',
+      'auth/user-disabled': 'Esta cuenta está deshabilitada.',
+      'auth/user-not-found': 'No existe una cuenta con ese correo.',
+      'auth/wrong-password': 'Contraseña incorrecta.',
+      'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+      'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos.'
+    }[e.code] || 'No se pudo iniciar sesión.';
+    $('loginError').textContent = msg;
+  }finally{
+    btn.disabled = false; btn.textContent='Entrar';
+  }
+}
+
+async function doLogout(){
+  try{ await firebase.auth().signOut(); toast('Sesión cerrada','i'); }
+  catch(e){ console.error('[Auth] signOut error', e); }
+}
 
 /* ═══════════════ UTILIDADES ═══════════════ */
 function bust(u){
@@ -476,6 +566,7 @@ function initFirebase(){
       firebase.initializeApp(fb);
     }
       db = firebase.firestore();
+      attachAuthListener();
       console.log('[Firebase] db ok:', db);
       return db;
   }catch(e2){
@@ -527,12 +618,18 @@ function startLiveListener(callback){
 async function sendToFirestore(m){
   console.log('[Firestore] db:', !!db, 'projectId:', effCfg().firebase?.projectId);
   if(!db){ console.error('[Firestore] db is null/undefined'); return false; }
+  const user = firebase.auth && firebase.auth().currentUser;
+  if(!user){
+    console.warn('[Firestore] Intento de escritura sin sesión; Firestore lo rechazará.');
+    toast('Debes iniciar sesión como Tesorero para guardar movimientos','e');
+    return false;
+  }
   try{
     const c=CATALOGO.find(x=>x.codigo===m.cuenta);
     const docData = {
       ...m,
       cuenta_nombre: c?c.cuenta:'',
-       usuario:'Tesorero',
+       usuario: user.email || 'Tesorero',
        fecha: m.fecha||new Date().toISOString().slice(0,10),
        ts: new Date()
     };
@@ -874,9 +971,6 @@ async function renderConc(){
 async function loadSheets(){
   await loadConfigJson();
   LOAD_STATUS = 'firebase='+(effCfg().firebase?.projectId||'(sin config)');
-  if(!document.body.classList.contains('pub-mode') && Object.keys(cfg).length===0 && cfgRemote && cfgRemote.firebase?.projectId){
-    document.body.classList.add('pub-mode'); go('resumen');
-  }
   const e=effCfg();
   let remotos=[], fuente='';
 
@@ -939,7 +1033,7 @@ async function loadConfigJson(){
         firebase: j.firebase||null,
         live: j.live===true
       };
-      cfg = {...cfg, ...cfgRemote, firebase:{...cfg.firebase, ...cfgRemote.firebase}};
+      cfg = {...cfgRemote, ...cfg};
       lsSet('promuf_cfg', JSON.stringify(cfg));
     }
   }catch(e){ cfgRemote = null; }
