@@ -66,6 +66,19 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Ficha del socio: identidad + estado de membresía + datos del carnet.
+    // Documento clave = cédula normalizada (MAYÚSCULAS, sin espacios).
+    // Lectura pública porque el carnet se verifica escaneando un QR sin
+    // que quien verifica tenga que iniciar sesión (igual que un carnet
+    // físico). Escritura solo del Tesorero: el campo mes_pagado_hasta lo
+    // actualiza automáticamente la transacción de aprobar() en Pagos; los
+    // campos del carnet (foto, cargo, período) los carga el Tesorero a
+    // mano desde el módulo de Carnetización.
+    match /socios/{cedula} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Nadie puede leer ni escribir la lista de administradores desde el
     // cliente (ni siquiera el propio admin): se gestiona solo desde la
     // consola de Firebase o con el SDK Admin (scripts/sync_data.mjs).

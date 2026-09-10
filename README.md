@@ -67,8 +67,34 @@ Permite a cualquier socio reportar el pago de su mensualidad (banco, referencia,
 ### Puesta en marcha del módulo de Pagos (una sola vez, en la consola de Firebase)
 
 1. **Habilitar acceso anónimo** — *Authentication* → *Sign-in method* → activa **Anónimo**. Esto es lo que permite a cualquier socio reportar un pago sin crear cuenta.
-2. **Volver a publicar `firestore.rules`** — ya lo hiciste una vez para Tesorería; este archivo ahora incluye también la colección `pagos_membresia`, así que hay que publicarlo de nuevo con la versión actualizada.
+2. **Volver a publicar `firestore.rules`** — ya lo hiciste una vez para Tesorería; este archivo ahora incluye también las colecciones `pagos_membresia` y `socios`, así que hay que publicarlo de nuevo con la versión actualizada.
 3. Los mismos usuarios de la colección `admins` (ver sección de Tesorería más abajo) son quienes ven el "Panel del Tesorero" en este módulo — no hace falta configurar nada adicional para el Tesorero.
+
+## Colección `socios`: el vínculo entre Pagos y Carnetización
+
+`socios/{cedula}` (documento clave = cédula normalizada) es la ficha central de cada agremiado. Se llena desde dos lugares distintos:
+
+- **Automáticamente**, cuando el Tesorero aprueba un pago en el módulo de Pagos: se actualiza (o crea) el campo `mes_pagado_hasta` con el mes más reciente cubierto. Esto ocurre dentro de la misma transacción que registra el movimiento contable, así que nunca queda desincronizado.
+- **A mano**, desde el módulo de Carnetización (`modulos-carnet/`), donde el Tesorero completa los datos que no vienen de un pago: nombre, cargo, número de carnet, período de vigencia y foto.
+
+La membresía **no se marca como "activa/inactiva" de forma fija** — se calcula al momento de mostrarla, comparando `mes_pagado_hasta` contra el mes actual. Esto evita el bug típico de un campo que nunca se "desactiva" solo si el socio deja de pagar.
+
+## Módulo: Carnetización Digital (`modulos-carnet/`)
+
+Reemplaza el flujo anterior (Google Apps Script + Google Sheets + fotos como archivos sueltos en `carnet-digital/assets/fotos/`) por el mismo esquema de Firebase que ya usan Tesorería y Pagos — **sin usar Firebase Storage**, porque el proyecto está en el plan gratuito (Spark) y Storage requiere el plan de pago (Blaze).
+
+**Cómo se evita Storage:** la foto se redimensiona y comprime en el propio navegador (canvas a ~320px, JPEG calidad 0.6) y se guarda como texto base64 **dentro del mismo documento** de `socios`. Un documento de Firestore admite hasta 1 MB; una foto de carnet comprimida así ronda 20–80 KB, muy por debajo del límite.
+
+**Tres vistas dentro del mismo módulo:**
+1. **Mi carnet** (pública): el socio escribe su cédula, ve su carnet y puede descargarlo como PDF con el tamaño exacto de una tarjeta PVC (CR80, 54×85.6mm) para imprimir.
+2. **Gestión de socios** (solo Tesorero, mismo login que en los otros módulos): crea o edita la ficha de un socio — nombre, cargo, número de carnet, vigencia y foto.
+3. **Verificación pública** (`?verificar=<cedula>`, es el enlace que codifica el QR del carnet): cualquiera que escanee el carnet físico ve, sin iniciar sesión, si el carnet está vigente y si el socio está al día con su membresía — sin poder editar nada.
+
+### Puesta en marcha del módulo de Carnetización
+
+No hace falta activar nada nuevo en Firebase: usa la misma autenticación anónima y la misma cuenta de `admins` que ya configuraste para Pagos. Solo asegúrate de haber publicado la versión más reciente de `firestore.rules` (incluye la colección `socios`).
+
+**Nota:** el repositorio anterior `carnet-digital` (Google Apps Script) queda como respaldo histórico; no se migran automáticamente las fichas ni las fotos que ya existían ahí — hay que recargarlas a mano una vez en "Gestión de socios".
 
 ## Repos de origen (respaldo)
 
