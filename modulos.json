@@ -3,6 +3,6 @@
     {"id": "inicio", "nombre": "Inicio", "icono": "🏠", "estado": "listo"},
     {"id": "tesoreria", "nombre": "Tesorería y Transparencia", "icono": "📊", "estado": "listo", "ruta": "modulos/tesoreria/index.html", "color": "#3fd0c9", "desc": "Cuentas del gremio, fondos, movimientos y auditoría"},
     {"id": "pagos", "nombre": "Pagos de Membresía", "icono": "🧾", "estado": "listo", "ruta": "modulos-pagos/index.html", "color": "#eab308", "desc": "Reporta tu pago de mensualidad y consulta su estado"},
-    {"id": "carnet", "nombre": "Carnet Digital", "icono": "🪪", "estado": "proximamente", "color": "#e6c468", "desc": "Carnetización digital de los agremiados"}
+    {"id": "carnet", "nombre": "Carnetización Digital", "icono": "🪪", "estado": "listo", "ruta": "modulos-carnet/index.html", "color": "#e6c468", "desc": "Consulta o emite el carnet digital de los agremiados"}
   ]
 }

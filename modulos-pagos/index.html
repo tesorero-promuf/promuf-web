@@ -333,10 +333,11 @@ async function doLogout(){
 }
 
 /* ═══════════ REGISTRAR PAGO ═══════════ */
+function normCedula(s){ return (s||'').trim().toUpperCase().replace(/\s+/g,''); }
 async function enviarPago(){
   $('formError').textContent='';
   const nombre = $('fNombre').value.trim();
-  const cedula = $('fCedula').value.trim();
+  const cedula = normCedula($('fCedula').value);
   const banco = $('fBanco').value;
   const referencia = $('fReferencia').value.trim();
   const fecha = $('fFecha').value;
@@ -513,6 +514,24 @@ async function aprobar(id){
         revisado_por: currentUser.email,
         fecha_revision: firebase.firestore.FieldValue.serverTimestamp()
       });
+
+      // Actualiza (o crea) la ficha del socio con el mes hasta el cual
+      // está al día. No se sobrescribe con un mes anterior al que ya
+      // tenía registrado (por si se aprueban pagos fuera de orden).
+      if(pago.cedula){
+        const socioRef = db.collection('socios').doc(pago.cedula);
+        const socioSnap = await transaction.get(socioRef);
+        const actual = socioSnap.exists ? socioSnap.data() : {};
+        const mesNuevo = pago.mes_correspondiente || null;
+        const mesFinal = (mesNuevo && (!actual.mes_pagado_hasta || mesNuevo > actual.mes_pagado_hasta))
+          ? mesNuevo : (actual.mes_pagado_hasta || null);
+        transaction.set(socioRef, {
+          cedula: pago.cedula,
+          nombre: pago.nombre_socio || actual.nombre || '',
+          mes_pagado_hasta: mesFinal,
+          ultima_actualizacion: firebase.firestore.FieldValue.serverTimestamp()
+        }, {merge:true});
+      }
     });
     toast('Pago aprobado y registrado en Fondo Cuotas de Membresía','s');
     cargarPanel();
