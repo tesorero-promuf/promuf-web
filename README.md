@@ -52,6 +52,27 @@ Acceso: los módulos listos se abren en `#/<id>` (ej. `#/tesoreria`). El módulo
 - El Tesorero usa `?priv=1` en la URL para ver su vista administrativa:
   `https://tesorero-promuf.github.io/promuf-web/?priv=1#/tesoreria`
 
+## Módulo: Pagos de Membresía (`modulos/pagos/`)
+
+Permite a cualquier socio reportar el pago de su mensualidad (banco, referencia, fecha, monto y comprobante en imagen/PDF) sin necesidad de crear una cuenta. El Tesorero valida cada reporte desde un panel dentro del mismo módulo.
+
+**Flujo:**
+1. El socio llena el formulario y adjunta el comprobante → se guarda en Firestore (`pagos_membresia`) con `estado: "pendiente"` y el archivo en Storage (`comprobantes_pago/<uid>/...`).
+2. El sistema le da un código de referencia (el ID del documento) que puede usar en la pestaña "Mis reportes" para ver el estado más adelante, desde el mismo navegador.
+3. El Tesorero (autenticado igual que en Tesorería) ve la cola de pendientes en "Panel del Tesorero", revisa el comprobante y **Aprueba** o **Rechaza** (con motivo).
+4. Al aprobar, el socio ve en "Mis reportes": **"Su pago fue procesado exitosamente"**.
+
+**Cómo se protege sin que el socio tenga cuenta:** el navegador abre una sesión anónima de Firebase Auth (invisible, sin pantalla de login) apenas carga el módulo. Eso le da un UID técnico que las reglas usan para permitir: crear su propio reporte (siempre en `pendiente`, nunca puede auto-aprobarse) y leer solo lo que él mismo creó. Solo una cuenta que esté en la colección `admins` (la del Tesorero) puede ver todos los reportes y cambiar su estado — mismo mecanismo que ya protege Tesorería.
+
+**Nota de seguridad sobre `comprobante_url`:** ese campo guarda un enlace de descarga de Firebase Storage que incluye un token; quien tenga ese enlace puede abrir el archivo directamente, sin pasar por las reglas de seguridad (es una limitación conocida de Firebase Storage, no de este código). Trátalo como un dato semi-sensible: no lo publiques ni lo compartas fuera del panel del Tesorero. Si un enlace se filtra, se puede revocar desde Firebase Console → Storage → seleccionar el archivo → "Restablecer token de descarga".
+
+### Puesta en marcha del módulo de Pagos (una sola vez, en la consola de Firebase)
+
+1. **Habilitar acceso anónimo** — *Authentication* → *Sign-in method* → activa **Anónimo**. Esto es lo que permite a cualquier socio reportar un pago sin crear cuenta.
+2. **Publicar `storage.rules`** — *Storage* → *Rules* → pega el contenido de `storage.rules` de este repo → *Publish*. Sin este paso, Storage seguirá con sus reglas por defecto y las subidas de comprobantes fallarán o quedarán expuestas.
+3. **Volver a publicar `firestore.rules`** — ya lo hiciste una vez para Tesorería; este archivo ahora incluye también la colección `pagos_membresia`, así que hay que publicarlo de nuevo con la versión actualizada.
+4. Los mismos usuarios de la colección `admins` (ver sección de Tesorería más abajo) son quienes ven el "Panel del Tesorero" en este módulo — no hace falta configurar nada adicional para el Tesorero.
+
 ## Repos de origen (respaldo)
 
 - [promuf-transparencia](https://github.com/tesorero-promuf/promuf-transparencia) — dashboard original de tesorería (migrado a `modulos/tesoreria/`).

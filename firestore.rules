@@ -1,0 +1,83 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Un usuario es "admin" (Tesorero) si existe un documento con su UID
+    // en la colección /admins. Esa colección se gestiona a mano desde la
+    // consola de Firebase (Firestore Database > admins > <uid> > { rol: "tesorero" }),
+    // nunca desde el cliente.
+    function isAdmin() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Transparencia radical (Art. 4.1 R.CC): lectura pública en todas las
+    // colecciones de datos financieros. Escritura solo para el Tesorero
+    // autenticado.
+    match /movimientos/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /fondos/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /conciliacion/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /catalogo/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Reportes de pago de membresía (módulo /modulos/pagos).
+    // Los socios NO tienen cuenta propia: usan una sesión anónima de
+    // Firebase Auth (silenciosa, sin pantalla de login) que les da un UID
+    // técnico. Con eso pueden:
+    //  - crear su propio reporte (siempre en estado "pendiente", nunca
+    //    pueden auto-aprobarse ni tocar el reporte de otro socio),
+    //  - leer únicamente los reportes que ellos mismos crearon.
+    // Solo el Tesorero (isAdmin()) puede leer todo, aprobar o rechazar,
+    // y solo puede tocar los campos de revisión (no el monto/adjunto).
+    match /pagos_membresia/{doc} {
+      allow create: if request.auth != null
+        && request.resource.data.id_usuario == request.auth.uid
+        && request.resource.data.estado == 'pendiente'
+        && request.resource.data.monto is number
+        && request.resource.data.monto > 0
+        && request.resource.data.nombre_socio is string
+        && request.resource.data.nombre_socio.size() > 0
+        && request.resource.data.cedula is string
+        && request.resource.data.cedula.size() > 0
+        && request.resource.data.referencia is string
+        && request.resource.data.banco_origen is string
+        && request.resource.data.comprobante_path is string;
+
+      allow read: if isAdmin()
+        || (request.auth != null && resource.data.id_usuario == request.auth.uid);
+
+      // El Tesorero solo puede modificar los campos de revisión, nunca
+      // el monto, la referencia ni el comprobante ya registrados.
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['estado', 'revisado_por', 'fecha_revision', 'motivo_rechazo']);
+
+      allow delete: if false;
+    }
+
+    // Nadie puede leer ni escribir la lista de administradores desde el
+    // cliente (ni siquiera el propio admin): se gestiona solo desde la
+    // consola de Firebase o con el SDK Admin (scripts/sync_data.mjs).
+    match /admins/{uid} {
+      allow read, write: if false;
+    }
+
+    // Bloqueo por defecto: cualquier otra colección no listada arriba
+    // queda cerrada a lectura y escritura.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
