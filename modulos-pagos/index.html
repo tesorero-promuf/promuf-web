@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Pagos de Membresía · PROMUF</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a1830;--bg2:#0e2244;--bg3:#12294f;
+    --tx:#f1f5f9;--tx2:#8ab0c8;--tx3:#5b7a94;
+    --bd:rgba(255,255,255,.09);
+    --teal:#3fd0c9;--teal2:#7fe3d4;--teal3:#0d5c5c;
+    --gold:#e6c468;--gold2:#d4af37;
+    --gr:#1d9e75;--ro:#e24b4a;--am:#eab308;
+    --r:12px;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(160deg,#0d1e3a 0%,var(--bg) 60%);color:var(--tx);min-height:100vh}
+  .hd{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:rgba(255,255,255,.04);border-bottom:1px solid var(--bd);flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:20;backdrop-filter:blur(10px)}
+  .hd .br{font-size:15px;font-weight:800}
+  .hd .br .pro{color:var(--teal2)}.hd .br .muf{color:var(--gold)}
+  .hd .sub{color:var(--tx2);font-size:.72rem;font-weight:400}
+  .hd-r{display:flex;align-items:center;gap:12px}
+  .tabs{display:flex;background:rgba(255,255,255,.03);border-bottom:1px solid var(--bd);overflow-x:auto;padding:0 12px}
+  .tab{background:none;border:none;color:var(--tx2);padding:11px 16px;font-size:.82rem;cursor:pointer;border-bottom:2px solid transparent;transition:.2s;white-space:nowrap;font-family:inherit}
+  .tab:hover{color:var(--tx)}
+  .tab.on{color:var(--teal);border-bottom-color:var(--teal);font-weight:700}
+  .tc{display:none;padding:20px;max-width:820px;margin:0 auto}.tc.on{display:block}
+  .cs{background:var(--bg2);border-radius:var(--r);padding:18px;border:1px solid var(--bd);margin-bottom:18px}
+  .cs h3{font-size:.9rem;margin-bottom:12px;color:var(--tx)}
+  .cs h3 .tag{color:var(--tx3);font-weight:400;font-size:.72rem;margin-left:6px}
+  .in{width:100%;padding:9px 12px;border-radius:var(--r);border:1px solid var(--bd);background:rgba(255,255,255,.05);color:var(--tx);font-size:.85rem;outline:none;font-family:inherit}
+  .in:focus{border-color:var(--teal)}
+  .in::placeholder{color:var(--tx3)}
+  select.in option{background:var(--bg2);color:var(--tx)}
+  .fg2{margin-bottom:13px}
+  .fg2 label{display:block;font-size:.72rem;color:var(--tx2);margin-bottom:4px;font-weight:600}
+  .row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .btn{padding:10px 18px;border-radius:var(--r);border:none;cursor:pointer;font-size:.82rem;font-weight:700;transition:.2s;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+  .btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .bt{background:linear-gradient(135deg,var(--teal),#1aa39a);color:#06332f;box-shadow:0 4px 16px rgba(63,208,201,.25)}
+  .bt:hover{opacity:.88}
+  .bo{background:rgba(255,255,255,.07);border:1px solid var(--bd);color:#c8d8ec}
+  .bo:hover{border-color:var(--teal);color:var(--teal)}
+  .bg{background:linear-gradient(135deg,var(--gr),#12704f);color:#04120d}
+  .br{background:rgba(226,75,74,.15);border:1px solid rgba(226,75,74,.4);color:var(--ro)}
+  .badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:.68rem;font-weight:700}
+  .b-am{background:rgba(234,179,8,.15);color:var(--am)}
+  .b-gr{background:rgba(29,158,117,.15);color:var(--gr)}
+  .b-ro{background:rgba(226,75,74,.15);color:var(--ro)}
+  .note{font-size:.72rem;color:var(--tx3);line-height:1.6;margin-top:6px}
+  .ok{color:var(--gr);font-weight:700}.err{color:var(--ro);font-weight:700}
+  .drop{border:2px dashed var(--bd);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:.2s;background:rgba(255,255,255,.02)}
+  .drop:hover,.drop.drag{border-color:var(--teal);background:rgba(63,208,201,.06)}
+  .drop .di{font-size:1.6rem}
+  .preview{margin-top:12px;display:none}
+  .preview.on{display:flex}
+  .preview{align-items:center;gap:12px;background:var(--bg3);border-radius:var(--r);padding:10px;border:1px solid var(--bd)}
+  .preview img{width:64px;height:64px;object-fit:cover;border-radius:8px;background:#000}
+  .preview .pf{width:64px;height:64px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:1.6rem}
+  .preview .pn{font-size:.76rem;color:var(--tx2);word-break:break-all;flex:1}
+  .preview .px{background:none;border:none;color:var(--ro);cursor:pointer;font-size:1.1rem;padding:4px}
+  .banner-ok{background:rgba(29,158,117,.12);border:1px solid rgba(29,158,117,.4);border-radius:var(--r);padding:22px;text-align:center}
+  .banner-ok .bi{font-size:2.4rem}
+  .banner-ok h2{color:var(--gr);margin:8px 0 6px;font-size:1.15rem}
+  .mi{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+  .mi .mn{font-weight:700;font-size:.84rem}
+  .mi .md{color:var(--tx3);font-size:.71rem;margin-top:3px;line-height:1.5}
+  .mright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .fb{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .fbtn{padding:6px 12px;border-radius:16px;border:1px solid var(--bd);background:var(--bg2);color:var(--tx2);cursor:pointer;font-size:.72rem;transition:.2s;font-family:inherit}
+  .fbtn:hover{border-color:var(--teal);color:var(--tx)}
+  .fbtn.on{background:var(--teal);color:#06332f;border-color:var(--teal);font-weight:700}
+  .mo{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);justify-content:center;align-items:center;padding:14px}
+  .mo.on{display:flex}
+  .ml2{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:420px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4);padding:20px}
+  .ml2 h2{font-size:1rem;margin-bottom:14px}
+  .mx{background:none;border:none;color:var(--tx2);font-size:1.3rem;cursor:pointer;float:right;padding:2px}
+  .mx:hover{color:var(--tx)}
+  .tt{position:fixed;bottom:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:7px}
+  .t{padding:10px 16px;border-radius:var(--r);font-size:.78rem;font-weight:600;animation:sI .3s;box-shadow:0 4px 24px rgba(0,0,0,.3)}
+  .t-s{background:var(--gr);color:#04120d}.t-e{background:var(--ro);color:#fff}.t-i{background:var(--teal);color:#06332f}
+  @keyframes sI{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+  .ld{text-align:center;padding:30px;color:var(--tx2);font-size:.8rem}
+  .ld .spin{width:26px;height:26px;border-radius:50%;border:3px solid rgba(63,208,201,.2);border-top-color:var(--teal);animation:sp .8s linear infinite;margin:0 auto 10px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  body.pub-mode .no-pub{display:none!important}
+  @media(max-width:640px){.hd{padding:10px 14px}.tc{padding:14px}.row2{grid-template-columns:1fr 1fr}}
+  @media(max-width:420px){.row2{grid-template-columns:1fr}.btn{width:100%;justify-content:center}.tt{left:12px;right:12px}.t{text-align:center}}
+</style>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+
+<div class="hd">
+  <div class="br"><span class="pro">PRO</span><span class="muf">MUF</span></div>
+  <div class="hd-r">
+    <span class="note no-pub" id="sesionInfo" style="margin:0"></span>
+    <button class="btn bo" id="btnLogin" onclick="openLogin()" style="display:none">🔑 Acceso Tesorero</button>
+    <button class="btn bo no-pub" id="btnLogout" onclick="doLogout()" style="display:none">🚪 Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab" data-t="reportar" onclick="go('reportar')">🧾 Reportar pago</button>
+  <button class="tab" data-t="misreportes" onclick="go('misreportes')">📋 Mis reportes</button>
+  <button class="tab no-pub" data-t="panel" onclick="go('panel')">🗂 Panel del Tesorero</button>
+</div>
+
+<!-- ═══════════ TAB: REPORTAR PAGO ═══════════ -->
+<div class="tc" id="tc-reportar">
+  <div class="cs">
+    <h3>Reportar pago de membresía <span class="tag">mensualidad del gremio</span></h3>
+    <div class="note" style="margin-bottom:14px">
+      Llena tus datos y adjunta la captura o PDF del comprobante bancario. Tu reporte queda en estado
+      <b>Pendiente</b> hasta que el Tesorero lo valide.
+    </div>
+
+    <div id="formPago">
+      <div class="row2">
+        <div class="fg2"><label>Nombre completo</label><input class="in" id="fNombre" placeholder="Nombre y apellido"></div>
+        <div class="fg2"><label>Cédula</label><input class="in" id="fCedula" placeholder="V-12345678"></div>
+      </div>
+      <div class="row2">
+        <div class="fg2">
+          <label>Banco emisor</label>
+          <select class="in" id="fBanco">
+            <option value="">Selecciona…</option>
+            <option>Banesco</option><option>Mercantil</option><option>Banco de Venezuela</option>
+            <option>BOD</option><option>Bancaribe</option><option>Provincial</option>
+            <option>BNC</option><option>BFC</option><option>Banplus</option>
+            <option>100% Banco</option><option>Otro</option>
+          </select>
+        </div>
+        <div class="fg2"><label>Número de referencia</label><input class="in" id="fReferencia" placeholder="Últimos dígitos de la transferencia"></div>
+      </div>
+      <div class="row2">
+        <div class="fg2"><label>Fecha del pago</label><input class="in" id="fFecha" type="date"></div>
+        <div class="fg2"><label>Monto (Bs.)</label><input class="in" id="fMonto" type="number" min="0" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="fg2"><label>Mes que corresponde</label><input class="in" id="fMes" type="month"></div>
+
+      <div class="fg2">
+        <label>Comprobante (imagen o PDF, máx. 5 MB)</label>
+        <div class="drop" id="dropZone" onclick="$('fArchivo').click()">
+          <div class="di">📎</div>
+          <div class="note">Toca para elegir el archivo o arrástralo aquí</div>
+        </div>
+        <input type="file" id="fArchivo" accept="image/*,application/pdf" style="display:none" onchange="onFileChosen(this.files[0])">
+        <div class="preview" id="previewBox">
+          <img id="previewImg" style="display:none">
+          <div class="pf" id="previewPdf" style="display:none">📄</div>
+          <div class="pn" id="previewName"></div>
+          <button class="px" onclick="clearFile()" title="Quitar">✕</button>
+        </div>
+      </div>
+
+      <div class="err" id="formError" style="min-height:16px;font-size:.76rem"></div>
+      <button class="btn bt" id="btnEnviar" onclick="enviarPago()">📤 Enviar comprobante</button>
+    </div>
+
+    <!-- Pantalla de éxito tras enviar -->
+    <div class="banner-ok" id="okBox" style="display:none">
+      <div class="bi">🕓</div>
+      <h2>Comprobante recibido</h2>
+      <div class="note" style="font-size:.8rem">
+        Tu pago quedó registrado con estado <b>Pendiente</b>. Guarda este código de referencia para
+        consultar su estado más adelante:
+      </div>
+      <div style="font-family:monospace;font-size:1rem;background:var(--bg3);border-radius:8px;padding:8px;margin:10px 0;word-break:break-all" id="okRef"></div>
+      <button class="btn bo" onclick="resetForm()">↺ Reportar otro pago</button>
+      <button class="btn bt" onclick="go('misreportes')">📋 Ver mis reportes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ TAB: MIS REPORTES ═══════════ -->
+<div class="tc" id="tc-misreportes">
+  <div class="cs">
+    <h3>Mis reportes de pago <span class="tag">en este dispositivo</span></h3>
+    <div class="note" style="margin-bottom:14px">
+      Se muestran los pagos que reportaste desde este mismo navegador. Si cambias de dispositivo o borras
+      los datos del navegador, no podrás verlos aquí (pero tu Tesorero sí conserva el registro).
+    </div>
+    <div id="misReportesList"><div class="ld"><div class="spin"></div>Cargando…</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ TAB: PANEL DEL TESORERO ═══════════ -->
+<div class="tc" id="tc-panel">
+  <div class="cs">
+    <h3>Validación de pagos <span class="tag">solo Tesorero</span></h3>
+    <div class="fb">
+      <button class="fbtn on" data-f="pendiente" onclick="filtrarPanel('pendiente')">🕓 Pendientes</button>
+      <button class="fbtn" data-f="aprobado" onclick="filtrarPanel('aprobado')">✅ Aprobados</button>
+      <button class="fbtn" data-f="rechazado" onclick="filtrarPanel('rechazado')">❌ Rechazados</button>
+      <button class="fbtn" data-f="todos" onclick="filtrarPanel('todos')">📋 Todos</button>
+    </div>
+    <div id="panelList"><div class="ld"><div class="spin"></div>Inicia sesión para ver los reportes.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL LOGIN (TESORERO) ═══════════ -->
+<div class="mo" id="moLogin">
+  <div class="ml2">
+    <button class="mx" onclick="closeLogin()">✕</button>
+    <h2>🔑 Acceso del Tesorero</h2>
+    <div class="note" style="margin-bottom:14px">
+      El resto del gremio no necesita iniciar sesión para reportar un pago.
+    </div>
+    <div class="fg2"><label>Correo</label><input class="in" id="loginEmail" type="email" placeholder="tesorero@promuf.org" autocomplete="username"></div>
+    <div class="fg2"><label>Contraseña</label><input class="in" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="note" id="loginError" style="color:var(--ro);min-height:16px"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn bt" id="btnLoginSubmit" onclick="doLogin()">Entrar</button>
+      <button class="btn bo" onclick="closeLogin()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL RECHAZO ═══════════ -->
+<div class="mo" id="moRechazo">
+  <div class="ml2">
+    <button class="mx" onclick="closeRechazo()">✕</button>
+    <h2>❌ Rechazar reporte</h2>
+    <div class="fg2"><label>Motivo (se guarda en el registro)</label>
+      <input class="in" id="motivoRechazo" placeholder="Ej: comprobante ilegible, monto no coincide…">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn br" onclick="confirmarRechazo()">Confirmar rechazo</button>
+      <button class="btn bo" onclick="closeRechazo()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tt" id="ttWrap"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let cfg = {}, app = null, db = null, storage = null, currentUser = null, archivoSel = null;
+let panelFiltro = 'pendiente', pendienteRechazoId = null;
+const MIS_KEY = 'promuf_pagos_mios';
+
+function toast(msg, tipo){
+  const d = document.createElement('div');
+  d.className = 't t-'+(tipo||'i');
+  d.textContent = msg;
+  $('ttWrap').appendChild(d);
+  setTimeout(()=>d.remove(), 3400);
+}
+
+/* ═══════════ NAVEGACIÓN DE TABS ═══════════ */
+function go(id){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on', b.dataset.t===id));
+  document.querySelectorAll('.tc').forEach(c=>c.classList.toggle('on', c.id==='tc-'+id));
+  if(id==='misreportes') renderMisReportes();
+  if(id==='panel' && currentUser) cargarPanel();
+}
+
+/* ═══════════ CONFIG + INIT FIREBASE ═══════════ */
+async function loadConfigJson(){
+  try{
+    const r = await fetch('../../config.json?_='+Date.now());
+    if(r.ok) cfg = await r.json();
+  }catch(e){ console.error('[config] no se pudo cargar', e); }
+}
+
+function initFirebase(){
+  if(!cfg.firebase || !cfg.firebase.projectId) return null;
+  if(!firebase.apps || !firebase.apps.length){
+    app = firebase.initializeApp(cfg.firebase);
+  }
+  db = firebase.firestore();
+  storage = firebase.storage();
+  attachAuthListener();
+  return db;
+}
+
+/* ═══════════ AUTENTICACIÓN ═══════════
+   Los socios usan una sesión anónima (silenciosa, sin pantalla de login)
+   para poder crear su reporte y luego consultarlo. El Tesorero usa una
+   sesión real de correo/contraseña; ambas conviven con el mismo listener. */
+let authListenerAttached = false;
+function attachAuthListener(){
+  if(authListenerAttached) return;
+  if(!(firebase.apps && firebase.apps.length)) return;
+  authListenerAttached = true;
+  firebase.auth().onAuthStateChanged(async user=>{
+    if(!user){
+      try{ await firebase.auth().signInAnonymously(); }
+      catch(e){ console.error('[Auth] signInAnonymously falló', e); toast('No se pudo preparar tu sesión. Recarga la página.','e'); }
+      return; // el propio signInAnonymously vuelve a disparar este listener
+    }
+    currentUser = user;
+    if(user.isAnonymous){
+      document.body.classList.add('pub-mode');
+      $('btnLogin').style.display='';
+      $('btnLogout').style.display='none';
+      $('sesionInfo').textContent='';
+    } else {
+      document.body.classList.remove('pub-mode');
+      $('btnLogin').style.display='none';
+      $('btnLogout').style.display='';
+      $('sesionInfo').textContent = '👤 '+(user.email||'Tesorero');
+      closeLogin();
+      toast('Sesión iniciada como '+(user.email||'Tesorero'),'s');
+      cargarPanel();
+    }
+  }, err=>console.error('[Auth] onAuthStateChanged error', err));
+}
+
+function openLogin(){ $('loginError').textContent=''; $('loginPass').value=''; $('moLogin').classList.add('on'); $('loginEmail').focus(); }
+function closeLogin(){ $('moLogin').classList.remove('on'); }
+
+async function doLogin(){
+  const email = $('loginEmail').value.trim();
+  const pass = $('loginPass').value;
+  $('loginError').textContent='';
+  if(!email || !pass){ $('loginError').textContent='Indica correo y contraseña.'; return; }
+  const btn = $('btnLoginSubmit');
+  btn.disabled = true; btn.textContent='Entrando…';
+  try{
+    await firebase.auth().signInWithEmailAndPassword(email, pass);
+  }catch(e){
+    const msg = {
+      'auth/invalid-email': 'Correo inválido.',
+      'auth/user-disabled': 'Esta cuenta está deshabilitada.',
+      'auth/user-not-found': 'No existe una cuenta con ese correo.',
+      'auth/wrong-password': 'Contraseña incorrecta.',
+      'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+      'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos.'
+    }[e.code] || 'No se pudo iniciar sesión.';
+    $('loginError').textContent = msg;
+  }finally{
+    btn.disabled = false; btn.textContent='Entrar';
+  }
+}
+
+async function doLogout(){
+  try{
+    await firebase.auth().signOut();
+    toast('Sesión cerrada','i');
+    // Volvemos a modo socio (sesión anónima) para poder seguir usando el formulario
+    await firebase.auth().signInAnonymously();
+  }catch(e){ console.error('[Auth] signOut error', e); }
+}
+
+/* ═══════════ FORMULARIO: ARCHIVO ═══════════ */
+function onFileChosen(file){
+  if(!file) return;
+  if(file.size > 5*1024*1024){ toast('El archivo supera 5 MB','e'); return; }
+  if(!/^image\//.test(file.type) && file.type !== 'application/pdf'){ toast('Solo se aceptan imágenes o PDF','e'); return; }
+  archivoSel = file;
+  $('previewBox').classList.add('on');
+  $('previewName').textContent = file.name;
+  if(/^image\//.test(file.type)){
+    $('previewImg').style.display='block'; $('previewPdf').style.display='none';
+    const reader = new FileReader();
+    reader.onload = e => $('previewImg').src = e.target.result;
+    reader.readAsDataURL(file);
+  } else {
+    $('previewImg').style.display='none'; $('previewPdf').style.display='flex';
+  }
+}
+function clearFile(){ archivoSel=null; $('fArchivo').value=''; $('previewBox').classList.remove('on'); }
+
+(function dragDrop(){
+  const dz = document.getElementById('dropZone');
+  ['dragover','dragleave','drop'].forEach(ev=>{
+    dz.addEventListener(ev, e=>{ e.preventDefault();
+      if(ev==='dragover') dz.classList.add('drag');
+      else dz.classList.remove('drag');
+    });
+  });
+  dz.addEventListener('drop', e=>{ if(e.dataTransfer.files[0]) onFileChosen(e.dataTransfer.files[0]); });
+})();
+
+/* ═══════════ ENVIAR PAGO ═══════════ */
+async function enviarPago(){
+  $('formError').textContent='';
+  const nombre = $('fNombre').value.trim();
+  const cedula = $('fCedula').value.trim();
+  const banco = $('fBanco').value;
+  const referencia = $('fReferencia').value.trim();
+  const fecha = $('fFecha').value;
+  const monto = parseFloat($('fMonto').value);
+  const mes = $('fMes').value;
+
+  if(!nombre || !cedula || !banco || !referencia || !fecha || !monto || monto<=0){
+    $('formError').textContent = 'Completa todos los campos con un monto válido.'; return;
+  }
+  if(!archivoSel){ $('formError').textContent = 'Adjunta el comprobante (imagen o PDF).'; return; }
+  if(!currentUser){ $('formError').textContent = 'Tu sesión aún se está preparando, intenta de nuevo en un segundo.'; return; }
+  if(!db || !storage){ $('formError').textContent = 'No hay conexión con el servidor. Recarga la página.'; return; }
+
+  const btn = $('btnEnviar');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  try{
+    const ext = (archivoSel.name.split('.').pop()||'bin').toLowerCase();
+    const path = `comprobantes_pago/${currentUser.uid}/${Date.now()}.${ext}`;
+    const ref = storage.ref().child(path);
+    await ref.put(archivoSel, {contentType: archivoSel.type});
+    const url = await ref.getDownloadURL();
+
+    const docData = {
+      id_usuario: currentUser.uid,
+      nombre_socio: nombre,
+      cedula: cedula,
+      banco_origen: banco,
+      referencia: referencia,
+      fecha_pago: fecha,
+      monto: monto,
+      mes_correspondiente: mes || null,
+      comprobante_path: path,
+      comprobante_url: url,
+      estado: 'pendiente',
+      revisado_por: null,
+      fecha_revision: null,
+      motivo_rechazo: null,
+      fecha_creacion: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const docRef = await db.collection('pagos_membresia').add(docData);
+
+    guardarReferenciaLocal(docRef.id);
+    $('okRef').textContent = docRef.id;
+    $('formPago').style.display='none';
+    $('okBox').style.display='block';
+    toast('Comprobante enviado, queda pendiente de revisión','s');
+  }catch(e){
+    console.error('[enviarPago]', e);
+    $('formError').textContent = 'No se pudo enviar el comprobante. Intenta de nuevo.';
+  }finally{
+    btn.disabled = false; btn.textContent = '📤 Enviar comprobante';
+  }
+}
+
+function resetForm(){
+  ['fNombre','fCedula','fReferencia','fFecha','fMonto','fMes'].forEach(id=>$(id).value='');
+  $('fBanco').value=''; clearFile();
+  $('formPago').style.display='block'; $('okBox').style.display='none';
+}
+
+/* ═══════════ MIS REPORTES (localStorage + lectura propia) ═══════════ */
+function guardarReferenciaLocal(id){
+  const l = JSON.parse(localStorage.getItem(MIS_KEY)||'[]');
+  if(!l.includes(id)){ l.unshift(id); localStorage.setItem(MIS_KEY, JSON.stringify(l.slice(0,30))); }
+}
+
+async function renderMisReportes(){
+  const ids = JSON.parse(localStorage.getItem(MIS_KEY)||'[]');
+  const cont = $('misReportesList');
+  if(!ids.length){ cont.innerHTML = '<div class="note">Todavía no has reportado ningún pago desde este navegador.</div>'; return; }
+  if(!db){ cont.innerHTML = '<div class="ld"><div class="spin"></div>Conectando…</div>'; return; }
+  cont.innerHTML = '<div class="ld"><div class="spin"></div>Cargando…</div>';
+  try{
+    const docs = await Promise.all(ids.map(id=>db.collection('pagos_membresia').doc(id).get().catch(()=>null)));
+    const items = docs.filter(d=>d && d.exists).map(d=>({id:d.id, ...d.data()}));
+    if(!items.length){ cont.innerHTML = '<div class="note">No se encontraron reportes asociados a este navegador.</div>'; return; }
+    cont.innerHTML = items.map(it=>{
+      if(it.estado==='aprobado'){
+        return `<div class="banner-ok" style="margin-bottom:10px">
+          <div class="bi">✅</div>
+          <h2>Su pago fue procesado exitosamente</h2>
+          <div class="note">${it.referencia} · Bs. ${Number(it.monto).toLocaleString('es-VE')} · ${it.fecha_pago}</div>
+        </div>`;
+      }
+      const badge = it.estado==='rechazado' ? '<span class="badge b-ro">❌ Rechazado</span>' : '<span class="badge b-am">🕓 Pendiente</span>';
+      return `<div class="mi">
+        <div>
+          <div class="mn">${it.referencia} — Bs. ${Number(it.monto).toLocaleString('es-VE')}</div>
+          <div class="md">${it.banco_origen} · ${it.fecha_pago}${it.motivo_rechazo?`<br>Motivo: ${it.motivo_rechazo}`:''}</div>
+        </div>
+        <div class="mright">${badge}</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    console.error('[renderMisReportes]', e);
+    cont.innerHTML = '<div class="note err">No se pudieron cargar tus reportes.</div>';
+  }
+}
+
+/* ═══════════ PANEL DEL TESORERO ═══════════ */
+function filtrarPanel(f){
+  panelFiltro = f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.toggle('on', b.dataset.f===f));
+  cargarPanel();
+}
+
+async function cargarPanel(){
+  if(!currentUser || currentUser.isAnonymous){ return; }
+  const cont = $('panelList');
+  cont.innerHTML = '<div class="ld"><div class="spin"></div>Cargando…</div>';
+  try{
+    let q = db.collection('pagos_membresia');
+    q = panelFiltro==='todos' ? q : q.where('estado','==',panelFiltro);
+    const snap = await q.orderBy('fecha_creacion','desc').limit(100).get();
+    if(snap.empty){ cont.innerHTML = '<div class="note">No hay reportes en esta categoría.</div>'; return; }
+    cont.innerHTML = snap.docs.map(d=>{
+      const it = d.data();
+      const badge = it.estado==='aprobado' ? '<span class="badge b-gr">✅ Aprobado</span>'
+                  : it.estado==='rechazado' ? '<span class="badge b-ro">❌ Rechazado</span>'
+                  : '<span class="badge b-am">🕓 Pendiente</span>';
+      const acciones = it.estado==='pendiente' ? `
+          <button class="btn bg" style="padding:6px 10px;font-size:.72rem" onclick="aprobar('${d.id}')">✅ Aprobar</button>
+          <button class="btn br" style="padding:6px 10px;font-size:.72rem" onclick="abrirRechazo('${d.id}')">❌ Rechazar</button>` : '';
+      return `<div class="mi">
+        <div>
+          <div class="mn">${it.nombre_socio||'(sin nombre)'} · ${it.cedula||''}</div>
+          <div class="md">
+            ${it.banco_origen} · Ref: ${it.referencia} · Bs. ${Number(it.monto).toLocaleString('es-VE')} · ${it.fecha_pago}
+            ${it.mes_correspondiente?` · Mes: ${it.mes_correspondiente}`:''}
+            ${it.motivo_rechazo?`<br>Motivo de rechazo: ${it.motivo_rechazo}`:''}
+            <br><a href="${it.comprobante_url}" target="_blank" rel="noopener" style="color:var(--teal)">📎 Ver comprobante</a>
+          </div>
+        </div>
+        <div class="mright">${badge}${acciones}</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    console.error('[cargarPanel]', e);
+    cont.innerHTML = '<div class="note err">No se pudo cargar el listado (¿tu cuenta está en la colección admins?).</div>';
+  }
+}
+
+async function aprobar(id){
+  if(!confirm('¿Confirmar este pago como válido?')) return;
+  try{
+    await db.collection('pagos_membresia').doc(id).update({
+      estado: 'aprobado',
+      revisado_por: currentUser.email,
+      fecha_revision: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('Pago aprobado','s');
+    cargarPanel();
+  }catch(e){ console.error(e); toast('No se pudo aprobar','e'); }
+}
+
+function abrirRechazo(id){ pendienteRechazoId = id; $('motivoRechazo').value=''; $('moRechazo').classList.add('on'); }
+function closeRechazo(){ $('moRechazo').classList.remove('on'); pendienteRechazoId = null; }
+async function confirmarRechazo(){
+  const motivo = $('motivoRechazo').value.trim() || 'No especificado';
+  try{
+    await db.collection('pagos_membresia').doc(pendienteRechazoId).update({
+      estado: 'rechazado',
+      motivo_rechazo: motivo,
+      revisado_por: currentUser.email,
+      fecha_revision: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('Pago rechazado','i');
+    closeRechazo();
+    cargarPanel();
+  }catch(e){ console.error(e); toast('No se pudo rechazar','e'); }
+}
+
+/* ═══════════ ARRANQUE ═══════════ */
+(async function(){
+  document.body.classList.add('pub-mode'); // seguro por defecto
+  $('fFecha').max = new Date().toISOString().slice(0,10);
+  $('fFecha').value = new Date().toISOString().slice(0,10);
+  $('fMes').value = new Date().toISOString().slice(0,7);
+  go('reportar');
+  await loadConfigJson();
+  initFirebase();
+})();
+</script>
+</body>
+</html>

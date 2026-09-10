@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Un usuario es "admin" (Tesorero) si su UID existe en la colección
+    // /admins de Firestore (misma fuente de verdad que firestore.rules).
+    function isAdmin() {
+      return request.auth != null &&
+             firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid));
+    }
+
+    // Comprobantes de pago del módulo /modulos/pagos.
+    // Cada archivo vive en comprobantes_pago/{uid}/{archivo}, donde {uid}
+    // es el UID (anónimo) del socio que lo subió. Eso permite validar
+    // "solo el dueño puede subir a su propia carpeta" sin tener que
+    // consultar Firestore en cada subida.
+    match /comprobantes_pago/{uid}/{fileName} {
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*|application/pdf');
+
+      // Lectura: el propio socio (para revisar su comprobante) o el Tesorero.
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+
+      // Los comprobantes no se editan ni se reemplazan una vez enviados;
+      // conservan integridad como evidencia del pago.
+      allow update, delete: if false;
+    }
+
+    // Bloqueo por defecto para cualquier otra ruta del bucket.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
