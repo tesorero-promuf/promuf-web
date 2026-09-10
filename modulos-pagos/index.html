@@ -287,6 +287,12 @@ function initFirebase(){
    para poder crear su reporte y luego consultarlo. El Tesorero usa una
    sesión real de correo/contraseña; ambas conviven con el mismo listener. */
 let authListenerAttached = false;
+let authReadyResolve;
+let authReadyReject;
+const authReady = new Promise((resolve, reject)=>{
+  authReadyResolve = resolve;
+  authReadyReject = reject;
+});
 function attachAuthListener(){
   if(authListenerAttached) return;
   if(!(firebase.apps && firebase.apps.length)) return;
@@ -294,10 +300,11 @@ function attachAuthListener(){
   firebase.auth().onAuthStateChanged(async user=>{
     if(!user){
       try{ await firebase.auth().signInAnonymously(); }
-      catch(e){ console.error('[Auth] signInAnonymously falló', e); toast('No se pudo preparar tu sesión. Recarga la página.','e'); }
+      catch(e){ console.error('[Auth] signInAnonymously falló', e); authReadyReject(e); toast('No se pudo preparar tu sesión. Recarga la página.','e'); }
       return; // el propio signInAnonymously vuelve a disparar este listener
     }
     currentUser = user;
+    authReadyResolve(user);
     if(user.isAnonymous){
       document.body.classList.add('pub-mode');
       $('btnLogin').style.display='';
@@ -396,7 +403,18 @@ async function enviarPago(){
     $('formError').textContent = 'Completa todos los campos con un monto válido.'; return;
   }
   if(!archivoSel){ $('formError').textContent = 'Adjunta el comprobante (imagen o PDF).'; return; }
-  if(!currentUser){ $('formError').textContent = 'Tu sesión aún se está preparando, intenta de nuevo en un segundo.'; return; }
+  if(!currentUser){
+    try{
+      currentUser = await Promise.race([
+        authReady,
+        new Promise((_, reject)=>setTimeout(()=>reject(new Error('timeout')), 5000))
+      ]);
+    }catch(e){
+      console.error('[enviarPago] sesión no disponible', e);
+      $('formError').textContent = 'No se pudo preparar la sesión. Recarga la página e inténtalo de nuevo.';
+      return;
+    }
+  }
   if(!db || !storage){ $('formError').textContent = 'No hay conexión con el servidor. Recarga la página.'; return; }
 
   const btn = $('btnEnviar');
