@@ -531,12 +531,39 @@ async function cargarPanel(){
 async function aprobar(id){
   if(!confirm('¿Confirmar este pago como válido?')) return;
   try{
-    await db.collection('pagos_membresia').doc(id).update({
-      estado: 'aprobado',
-      revisado_por: currentUser.email,
-      fecha_revision: firebase.firestore.FieldValue.serverTimestamp()
+    const pagoRef = db.collection('pagos_membresia').doc(id);
+    const movimientoRef = db.collection('movimientos').doc('pago-membresia_'+id);
+    await db.runTransaction(async transaction=>{
+      const pagoSnap = await transaction.get(pagoRef);
+      if(!pagoSnap.exists) throw new Error('Pago no encontrado');
+      const pago = pagoSnap.data();
+      if(pago.estado !== 'pendiente') throw new Error('Este pago ya fue revisado');
+
+      const movimientoSnap = await transaction.get(movimientoRef);
+      if(!movimientoSnap.exists){
+        transaction.set(movimientoRef, {
+          fecha: pago.fecha_pago || new Date().toISOString().slice(0,10),
+          tipo: 'Ingreso',
+          fondo: 'Membresia',
+          moneda: 'Bs',
+          monto: Number(pago.monto),
+          cuenta: '4.1.01.02',
+          cuenta_nombre: 'Cuota mensual de membresía',
+          concepto: `Pago de membresía — ${pago.nombre_socio||'Agremiado'} — Ref. ${pago.referencia||id}`,
+          referencia: pago.referencia || '',
+          pago_membresia_id: id,
+          comprobante_url: pago.comprobante_url || '',
+          usuario: currentUser.email || 'Tesorero',
+          ts: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      transaction.update(pagoRef, {
+        estado: 'aprobado',
+        revisado_por: currentUser.email,
+        fecha_revision: firebase.firestore.FieldValue.serverTimestamp()
+      });
     });
-    toast('Pago aprobado','s');
+    toast('Pago aprobado y registrado en Fondo Cuotas de Membresía','s');
     cargarPanel();
   }catch(e){ console.error(e); toast('No se pudo aprobar','e'); }
 }
