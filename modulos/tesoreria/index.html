@@ -939,7 +939,7 @@ async function loadConfigJson(){
         firebase: j.firebase||null,
         live: j.live===true
       };
-      cfg = {...cfgRemote, ...cfg};
+      cfg = {...cfg, ...cfgRemote, firebase:{...cfg.firebase, ...cfgRemote.firebase}};
       lsSet('promuf_cfg', JSON.stringify(cfg));
     }
   }catch(e){ cfgRemote = null; }
