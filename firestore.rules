@@ -40,7 +40,7 @@ service cloud.firestore {
     //    pueden auto-aprobarse ni tocar el reporte de otro socio),
     //  - leer únicamente los reportes que ellos mismos crearon.
     // Solo el Tesorero (isAdmin()) puede leer todo, aprobar o rechazar,
-    // y solo puede tocar los campos de revisión (no el monto/adjunto).
+    // y solo puede tocar los campos de revisión (no el monto registrado).
     match /pagos_membresia/{doc} {
       allow create: if request.auth != null
         && request.resource.data.id_usuario == request.auth.uid
@@ -52,14 +52,13 @@ service cloud.firestore {
         && request.resource.data.cedula is string
         && request.resource.data.cedula.size() > 0
         && request.resource.data.referencia is string
-        && request.resource.data.banco_origen is string
-        && request.resource.data.comprobante_path is string;
+        && request.resource.data.banco_origen is string;
 
       allow read: if isAdmin()
         || (request.auth != null && resource.data.id_usuario == request.auth.uid);
 
       // El Tesorero solo puede modificar los campos de revisión, nunca
-      // el monto, la referencia ni el comprobante ya registrados.
+      // el monto ni la referencia ya registrados.
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['estado', 'revisado_por', 'fecha_revision', 'motivo_rechazo']);

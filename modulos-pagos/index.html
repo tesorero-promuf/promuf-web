@@ -52,16 +52,6 @@
   .b-ro{background:rgba(226,75,74,.15);color:var(--ro)}
   .note{font-size:.72rem;color:var(--tx3);line-height:1.6;margin-top:6px}
   .ok{color:var(--gr);font-weight:700}.err{color:var(--ro);font-weight:700}
-  .drop{border:2px dashed var(--bd);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:.2s;background:rgba(255,255,255,.02)}
-  .drop:hover,.drop.drag{border-color:var(--teal);background:rgba(63,208,201,.06)}
-  .drop .di{font-size:1.6rem}
-  .preview{margin-top:12px;display:none}
-  .preview.on{display:flex}
-  .preview{align-items:center;gap:12px;background:var(--bg3);border-radius:var(--r);padding:10px;border:1px solid var(--bd)}
-  .preview img{width:64px;height:64px;object-fit:cover;border-radius:8px;background:#000}
-  .preview .pf{width:64px;height:64px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:1.6rem}
-  .preview .pn{font-size:.76rem;color:var(--tx2);word-break:break-all;flex:1}
-  .preview .px{background:none;border:none;color:var(--ro);cursor:pointer;font-size:1.1rem;padding:4px}
   .banner-ok{background:rgba(29,158,117,.12);border:1px solid rgba(29,158,117,.4);border-radius:var(--r);padding:22px;text-align:center}
   .banner-ok .bi{font-size:2.4rem}
   .banner-ok h2{color:var(--gr);margin:8px 0 6px;font-size:1.15rem}
@@ -94,7 +84,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -118,7 +107,7 @@
   <div class="cs">
     <h3>Reportar pago de membresía <span class="tag">mensualidad del gremio</span></h3>
     <div class="note" style="margin-bottom:14px">
-      Llena tus datos y adjunta la captura o PDF del comprobante bancario. Tu reporte queda en estado
+      Llena tus datos del pago. Tu reporte queda en estado
       <b>Pendiente</b> hasta que el Tesorero lo valide.
     </div>
 
@@ -146,29 +135,14 @@
       </div>
       <div class="fg2"><label>Mes que corresponde</label><input class="in" id="fMes" type="month"></div>
 
-      <div class="fg2">
-        <label>Comprobante (imagen o PDF, máx. 5 MB)</label>
-        <div class="drop" id="dropZone" onclick="$('fArchivo').click()">
-          <div class="di">📎</div>
-          <div class="note">Toca para elegir el archivo o arrástralo aquí</div>
-        </div>
-        <input type="file" id="fArchivo" accept="image/*,application/pdf" style="display:none" onchange="onFileChosen(this.files[0])">
-        <div class="preview" id="previewBox">
-          <img id="previewImg" style="display:none">
-          <div class="pf" id="previewPdf" style="display:none">📄</div>
-          <div class="pn" id="previewName"></div>
-          <button class="px" onclick="clearFile()" title="Quitar">✕</button>
-        </div>
-      </div>
-
       <div class="err" id="formError" style="min-height:16px;font-size:.76rem"></div>
-      <button class="btn bt" id="btnEnviar" onclick="enviarPago()">📤 Enviar comprobante</button>
+      <button class="btn bt" id="btnEnviar" onclick="enviarPago()">📤 Registrar pago</button>
     </div>
 
     <!-- Pantalla de éxito tras enviar -->
     <div class="banner-ok" id="okBox" style="display:none">
       <div class="bi">🕓</div>
-      <h2>Comprobante recibido</h2>
+      <h2>Pago registrado</h2>
       <div class="note" style="font-size:.8rem">
         Tu pago quedó registrado con estado <b>Pendiente</b>. Guarda este código de referencia para
         consultar su estado más adelante:
@@ -243,7 +217,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-let cfg = {}, app = null, db = null, storage = null, currentUser = null, archivoSel = null;
+let cfg = {}, app = null, db = null, currentUser = null;
 let panelFiltro = 'pendiente', pendienteRechazoId = null;
 const MIS_KEY = 'promuf_pagos_mios';
 
@@ -278,7 +252,6 @@ function initFirebase(){
     app = firebase.initializeApp(cfg.firebase);
   }
   db = firebase.firestore();
-  storage = firebase.storage();
   attachAuthListener();
   return db;
 }
@@ -359,37 +332,7 @@ async function doLogout(){
   }catch(e){ console.error('[Auth] signOut error', e); }
 }
 
-/* ═══════════ FORMULARIO: ARCHIVO ═══════════ */
-function onFileChosen(file){
-  if(!file) return;
-  if(file.size > 5*1024*1024){ toast('El archivo supera 5 MB','e'); return; }
-  if(!/^image\//.test(file.type) && file.type !== 'application/pdf'){ toast('Solo se aceptan imágenes o PDF','e'); return; }
-  archivoSel = file;
-  $('previewBox').classList.add('on');
-  $('previewName').textContent = file.name;
-  if(/^image\//.test(file.type)){
-    $('previewImg').style.display='block'; $('previewPdf').style.display='none';
-    const reader = new FileReader();
-    reader.onload = e => $('previewImg').src = e.target.result;
-    reader.readAsDataURL(file);
-  } else {
-    $('previewImg').style.display='none'; $('previewPdf').style.display='flex';
-  }
-}
-function clearFile(){ archivoSel=null; $('fArchivo').value=''; $('previewBox').classList.remove('on'); }
-
-(function dragDrop(){
-  const dz = document.getElementById('dropZone');
-  ['dragover','dragleave','drop'].forEach(ev=>{
-    dz.addEventListener(ev, e=>{ e.preventDefault();
-      if(ev==='dragover') dz.classList.add('drag');
-      else dz.classList.remove('drag');
-    });
-  });
-  dz.addEventListener('drop', e=>{ if(e.dataTransfer.files[0]) onFileChosen(e.dataTransfer.files[0]); });
-})();
-
-/* ═══════════ ENVIAR PAGO ═══════════ */
+/* ═══════════ REGISTRAR PAGO ═══════════ */
 async function enviarPago(){
   $('formError').textContent='';
   const nombre = $('fNombre').value.trim();
@@ -403,7 +346,6 @@ async function enviarPago(){
   if(!nombre || !cedula || !banco || !referencia || !fecha || !monto || monto<=0){
     $('formError').textContent = 'Completa todos los campos con un monto válido.'; return;
   }
-  if(!archivoSel){ $('formError').textContent = 'Adjunta el comprobante (imagen o PDF).'; return; }
   if(!currentUser){
     try{
       currentUser = await Promise.race([
@@ -416,17 +358,11 @@ async function enviarPago(){
       return;
     }
   }
-  if(!db || !storage){ $('formError').textContent = 'No hay conexión con el servidor. Recarga la página.'; return; }
+  if(!db){ $('formError').textContent = 'No hay conexión con el servidor. Recarga la página.'; return; }
 
   const btn = $('btnEnviar');
   btn.disabled = true; btn.textContent = 'Enviando…';
   try{
-    const ext = (archivoSel.name.split('.').pop()||'bin').toLowerCase();
-    const path = `comprobantes_pago/${currentUser.uid}/${Date.now()}.${ext}`;
-    const ref = storage.ref().child(path);
-    await ref.put(archivoSel, {contentType: archivoSel.type});
-    const url = await ref.getDownloadURL();
-
     const docData = {
       id_usuario: currentUser.uid,
       nombre_socio: nombre,
@@ -436,8 +372,6 @@ async function enviarPago(){
       fecha_pago: fecha,
       monto: monto,
       mes_correspondiente: mes || null,
-      comprobante_path: path,
-      comprobante_url: url,
       estado: 'pendiente',
       revisado_por: null,
       fecha_revision: null,
@@ -450,18 +384,18 @@ async function enviarPago(){
     $('okRef').textContent = docRef.id;
     $('formPago').style.display='none';
     $('okBox').style.display='block';
-    toast('Comprobante enviado, queda pendiente de revisión','s');
+    toast('Pago registrado, queda pendiente de revisión','s');
   }catch(e){
     console.error('[enviarPago]', e);
-    $('formError').textContent = 'No se pudo enviar el comprobante. Intenta de nuevo.';
+    $('formError').textContent = 'No se pudo registrar el pago. Intenta de nuevo.';
   }finally{
-    btn.disabled = false; btn.textContent = '📤 Enviar comprobante';
+    btn.disabled = false; btn.textContent = '📤 Registrar pago';
   }
 }
 
 function resetForm(){
   ['fNombre','fCedula','fReferencia','fFecha','fMonto','fMes'].forEach(id=>$(id).value='');
-  $('fBanco').value=''; clearFile();
+  $('fBanco').value='';
   $('formPago').style.display='block'; $('okBox').style.display='none';
 }
 
@@ -535,7 +469,6 @@ async function cargarPanel(){
             ${it.banco_origen} · Ref: ${it.referencia} · Bs. ${Number(it.monto).toLocaleString('es-VE')} · ${it.fecha_pago}
             ${it.mes_correspondiente?` · Mes: ${it.mes_correspondiente}`:''}
             ${it.motivo_rechazo?`<br>Motivo de rechazo: ${it.motivo_rechazo}`:''}
-            <br><a href="${it.comprobante_url}" target="_blank" rel="noopener" style="color:var(--teal)">📎 Ver comprobante</a>
           </div>
         </div>
         <div class="mright">${badge}${acciones}</div>
@@ -571,7 +504,6 @@ async function aprobar(id){
           concepto: `Pago de membresía — ${pago.nombre_socio||'Agremiado'} — Ref. ${pago.referencia||id}`,
           referencia: pago.referencia || '',
           pago_membresia_id: id,
-          comprobante_url: pago.comprobante_url || '',
           usuario: currentUser.email || 'Tesorero',
           ts: firebase.firestore.FieldValue.serverTimestamp()
         });
