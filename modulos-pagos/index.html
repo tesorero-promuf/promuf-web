@@ -266,7 +266,7 @@ function go(id){
 /* ═══════════ CONFIG + INIT FIREBASE ═══════════ */
 async function loadConfigJson(){
   try{
-    const r = await fetch('../../config.json?_='+Date.now());
+    const r = await fetch('../config.json?_='+Date.now());
     if(r.ok) cfg = await r.json();
   }catch(e){ console.error('[config] no se pudo cargar', e); }
 }
