@@ -486,18 +486,15 @@ async function aprobar(id){
   try{
     const pagoRef = db.collection('pagos_membresia').doc(id);
     const movimientoRef = db.collection('movimientos').doc('pago-membresia_'+id);
+    let pagoAprobado = null;
     await db.runTransaction(async transaction=>{
       const pagoSnap = await transaction.get(pagoRef);
       if(!pagoSnap.exists) throw new Error('Pago no encontrado');
       const pago = pagoSnap.data();
       if(pago.estado !== 'pendiente') throw new Error('Este pago ya fue revisado');
+      pagoAprobado = pago;
 
       const movimientoSnap = await transaction.get(movimientoRef);
-      let socioSnap = null;
-      if(pago.cedula){
-        const socioRef = db.collection('socios').doc(pago.cedula);
-        socioSnap = await transaction.get(socioRef);
-      }
 
       if(!movimientoSnap.exists){
         transaction.set(movimientoRef, {
@@ -520,25 +517,34 @@ async function aprobar(id){
         revisado_por: currentUser.email,
         fecha_revision: firebase.firestore.FieldValue.serverTimestamp()
       });
+    });
 
-      // Actualiza (o crea) la ficha del socio con el mes hasta el cual
-      // está al día. No se sobrescribe con un mes anterior al que ya
-      // tenía registrado (por si se aprueban pagos fuera de orden).
-      if(pago.cedula){
-        const socioRef = db.collection('socios').doc(pago.cedula);
+    let socioSyncError = null;
+    if(pagoAprobado && pagoAprobado.cedula){
+      try{
+        const socioRef = db.collection('socios').doc(pagoAprobado.cedula);
+        const socioSnap = await socioRef.get();
         const actual = socioSnap.exists ? socioSnap.data() : {};
-        const mesNuevo = pago.mes_correspondiente || null;
+        const mesNuevo = pagoAprobado.mes_correspondiente || null;
         const mesFinal = (mesNuevo && (!actual.mes_pagado_hasta || mesNuevo > actual.mes_pagado_hasta))
           ? mesNuevo : (actual.mes_pagado_hasta || null);
-        transaction.set(socioRef, {
-          cedula: pago.cedula,
-          nombre: pago.nombre_socio || actual.nombre || '',
+        await socioRef.set({
+          cedula: pagoAprobado.cedula,
+          nombre: pagoAprobado.nombre_socio || actual.nombre || '',
           mes_pagado_hasta: mesFinal,
           ultima_actualizacion: firebase.firestore.FieldValue.serverTimestamp()
         }, {merge:true});
+      }catch(e){
+        socioSyncError = e;
+        console.error('[aprobar] sincronización de socio', e);
       }
-    });
-    toast('Pago aprobado y registrado en Fondo Cuotas de Membresía','s');
+    }
+
+    if(socioSyncError){
+      toast('Pago aprobado, pero no se actualizó la ficha: publica firestore.rules','e');
+    }else{
+      toast('Pago aprobado y registrado en Fondo Cuotas de Membresía','s');
+    }
     cargarPanel();
   }catch(e){
     console.error('[aprobar]', e);
