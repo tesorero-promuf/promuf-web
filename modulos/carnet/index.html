@@ -332,7 +332,10 @@ const LOGO = "data:image/webp;base64,UklGRqYkAABXRUJQVlA4IJokAABwcwCdASq0ALoAPlE
 let cfg = {}, db = null, currentUser = null, fotoB64Pendiente = null;
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function normCedula(s){ return (s||'').trim().toUpperCase().replace(/\s+/g,''); }
+function normCedula(s){
+  const numero = String(s||'').replace(/\D/g,'');
+  return numero ? 'V-'+numero : '';
+}
 function mesActualYYYYMM(){ return new Date().toISOString().slice(0,7); }
 function toast(msg, tipo){
   const d = document.createElement('div');
