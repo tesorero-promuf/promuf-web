@@ -493,6 +493,12 @@ async function aprobar(id){
       if(pago.estado !== 'pendiente') throw new Error('Este pago ya fue revisado');
 
       const movimientoSnap = await transaction.get(movimientoRef);
+      let socioSnap = null;
+      if(pago.cedula){
+        const socioRef = db.collection('socios').doc(pago.cedula);
+        socioSnap = await transaction.get(socioRef);
+      }
+
       if(!movimientoSnap.exists){
         transaction.set(movimientoRef, {
           fecha: pago.fecha_pago || new Date().toISOString().slice(0,10),
@@ -520,7 +526,6 @@ async function aprobar(id){
       // tenía registrado (por si se aprueban pagos fuera de orden).
       if(pago.cedula){
         const socioRef = db.collection('socios').doc(pago.cedula);
-        const socioSnap = await transaction.get(socioRef);
         const actual = socioSnap.exists ? socioSnap.data() : {};
         const mesNuevo = pago.mes_correspondiente || null;
         const mesFinal = (mesNuevo && (!actual.mes_pagado_hasta || mesNuevo > actual.mes_pagado_hasta))
@@ -535,7 +540,10 @@ async function aprobar(id){
     });
     toast('Pago aprobado y registrado en Fondo Cuotas de Membresía','s');
     cargarPanel();
-  }catch(e){ console.error(e); toast('No se pudo aprobar','e'); }
+  }catch(e){
+    console.error('[aprobar]', e);
+    toast(`No se pudo aprobar: ${e.message || 'error desconocido'}`,'e');
+  }
 }
 
 function abrirRechazo(id){ pendienteRechazoId = id; $('motivoRechazo').value=''; $('moRechazo').classList.add('on'); }
