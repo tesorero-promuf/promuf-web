@@ -54,32 +54,39 @@ Acceso: los módulos listos se abren en `#/<id>` (ej. `#/tesoreria`). El módulo
 
 ## Módulo: Pagos de Membresía (`modulos-pagos/`)
 
-Permite a cualquier socio reportar el pago de su mensualidad (banco, referencia, fecha y monto) sin necesidad de crear una cuenta. El Tesorero valida cada reporte desde un panel dentro del mismo módulo.
+Permite a cualquier socio reportar el pago de su mensualidad (banco, referencia, fecha, monto y comprobante en imagen/PDF) sin necesidad de crear una cuenta. El Tesorero valida cada reporte desde un panel dentro del mismo módulo.
 
 **Flujo:**
-1. El socio llena el formulario → se guarda en Firestore (`pagos_membresia`) con `estado: "pendiente"`.
+1. El socio llena el formulario y adjunta el comprobante → se guarda en Firestore (`pagos_membresia`) con `estado: "pendiente"`.
 2. El sistema le da un código de referencia (el ID del documento) que puede usar en la pestaña "Mis reportes" para ver el estado más adelante, desde el mismo navegador.
-3. El Tesorero (autenticado igual que en Tesorería) ve la cola de pendientes en "Panel del Tesorero" y **Aprueba** o **Rechaza** (con motivo).
+3. El Tesorero (autenticado igual que en Tesorería) ve la cola de pendientes en "Panel del Tesorero", abre el comprobante y **Aprueba** o **Rechaza** (con motivo).
 4. Al aprobar, el socio ve en "Mis reportes": **"Su pago fue procesado exitosamente"**.
 
 **Cómo se protege sin que el socio tenga cuenta:** el navegador abre una sesión anónima de Firebase Auth (invisible, sin pantalla de login) apenas carga el módulo. Eso le da un UID técnico que las reglas usan para permitir: crear su propio reporte (siempre en `pendiente`, nunca puede auto-aprobarse) y leer solo lo que él mismo creó. Solo una cuenta que esté en la colección `admins` (la del Tesorero) puede ver todos los reportes y cambiar su estado — mismo mecanismo que ya protege Tesorería.
 
+**El comprobante no usa Firebase Storage** (el proyecto está en el plan gratuito Spark). En su lugar:
+- Si es **imagen**, se redimensiona a un máximo de 1000px y se comprime a JPEG calidad 0.72 en el propio navegador.
+- Si es **PDF**, se limita a ~600 KB de origen (no se puede comprimir igual que una imagen).
+- El resultado se guarda como texto base64 en el campo `comprobante_b64` del propio documento, junto con `comprobante_tipo` (`image/jpeg` o `application/pdf`). Las reglas de Firestore exigen que ese campo exista y pesan menos de ~900 KB, dejando margen dentro del límite de 1 MB por documento.
+- En el panel del Tesorero, "📎 Ver comprobante" abre una ventana con la imagen o el PDF incrustado directamente (sin depender de un enlace externo).
+
 ### Puesta en marcha del módulo de Pagos (una sola vez, en la consola de Firebase)
 
 1. **Habilitar acceso anónimo** — *Authentication* → *Sign-in method* → activa **Anónimo**. Esto es lo que permite a cualquier socio reportar un pago sin crear cuenta.
-2. **Volver a publicar `firestore.rules`** — ya lo hiciste una vez para Tesorería; este archivo ahora incluye también las colecciones `pagos_membresia` y `socios`, así que hay que publicarlo de nuevo con la versión actualizada.
+2. **Volver a publicar `firestore.rules`** — ya lo hiciste una vez para Tesorería; este archivo ahora incluye también las colecciones `pagos_membresia` y `socios`, así que hay que publicarlo de nuevo con la versión actualizada (exige el campo `comprobante_b64`).
 3. Los mismos usuarios de la colección `admins` (ver sección de Tesorería más abajo) son quienes ven el "Panel del Tesorero" en este módulo — no hace falta configurar nada adicional para el Tesorero.
+4. **No hace falta activar Storage** en ningún momento — todo el flujo de comprobantes vive dentro de Firestore.
 
 ## Colección `socios`: el vínculo entre Pagos y Carnetización
 
 `socios/{cedula}` (documento clave = cédula normalizada) es la ficha central de cada agremiado. Se llena desde dos lugares distintos:
 
 - **Automáticamente**, cuando el Tesorero aprueba un pago en el módulo de Pagos: se actualiza (o crea) el campo `mes_pagado_hasta` con el mes más reciente cubierto. Esto ocurre dentro de la misma transacción que registra el movimiento contable, así que nunca queda desincronizado.
-- **A mano**, desde el módulo de Carnetización (`modulos-carnet/`), donde el Tesorero completa los datos que no vienen de un pago: nombre, cargo, número de carnet, período de vigencia y foto.
+- **A mano**, desde el módulo de Carnetización (`modulos/carnet/`), donde el Tesorero completa los datos que no vienen de un pago: nombre, cargo, número de carnet, período de vigencia y foto.
 
 La membresía **no se marca como "activa/inactiva" de forma fija** — se calcula al momento de mostrarla, comparando `mes_pagado_hasta` contra el mes actual. Esto evita el bug típico de un campo que nunca se "desactiva" solo si el socio deja de pagar.
 
-## Módulo: Carnetización Digital (`modulos-carnet/`)
+## Módulo: Carnetización Digital (`modulos/carnet/`)
 
 Reemplaza el flujo anterior (Google Apps Script + Google Sheets + fotos como archivos sueltos en `carnet-digital/assets/fotos/`) por el mismo esquema de Firebase que ya usan Tesorería y Pagos — **sin usar Firebase Storage**, porque el proyecto está en el plan gratuito (Spark) y Storage requiere el plan de pago (Blaze).
 
