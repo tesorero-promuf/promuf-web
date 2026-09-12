@@ -52,7 +52,10 @@ service cloud.firestore {
         && request.resource.data.cedula is string
         && request.resource.data.cedula.size() > 0
         && request.resource.data.referencia is string
-        && request.resource.data.banco_origen is string;
+        && request.resource.data.banco_origen is string
+        && request.resource.data.comprobante_b64 is string
+        && request.resource.data.comprobante_b64.size() > 0
+        && request.resource.data.comprobante_b64.size() < 900000;
 
       allow read: if isAdmin()
         || (request.auth != null && resource.data.id_usuario == request.auth.uid);
