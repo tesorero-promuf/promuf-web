@@ -44,18 +44,30 @@ async function cargarDatos(){
     const [m, c] = await Promise.all([fetch('modulos.json'), fetch('config.json')]);
     if(m.ok) MODULOS = (await m.json()).modulos || [];
     if(c.ok) CFG = await c.json();
-    $('dot').className = 'dot dot-on'; $('stxt').textContent = 'En línea';
-    // Inicializar auth global después de cargar datos
-    initGlobalAuth();
+    // Mostrar estado de conexión mientras Firebase se inicializa
+    $('dot').className = 'dot dot-wait'; $('stxt').textContent = 'Conectando…';
+    // Verificar configuración e inicializar auth
+    const hasFirebase = CFG.firebase && CFG.firebase.projectId;
+    if(hasFirebase){
+      initGlobalAuth();
+    } else {
+      $('dot').className = 'dot dot-off'; $('stxt').textContent = 'Sin configurar Firebase';
+    }
   }catch(e){
-    $('dot').className = 'dot dot-off'; $('stxt').textContent = 'Sin conexión';
+    $('dot').className = 'dot dot-off'; $('stxt').textContent = 'Error al cargar';
+    console.error('[cargarDatos]', e);
   }
 }
 
 function initGlobalAuth(){
   if(window.promufGlobalAuthInit) return;
   window.promufGlobalAuthInit = true;
-  if(!(firebase.apps && firebase.apps.length)) return;
+  if(!(firebase.apps && firebase.apps.length)){
+    $('dot').className = 'dot dot-off'; $('stxt').textContent = 'Sin Firebase';
+    return;
+  }
+  // Firebase configurado - actualizar estado inicial
+  $('dot').className = 'dot dot-on'; $('stxt').textContent = 'En línea';
   firebase.auth().onAuthStateChanged(user=>{
     globalUser = user;
     if(user && !user.isAnonymous){
