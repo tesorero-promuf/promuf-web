@@ -8,7 +8,7 @@
 const $ = id => document.getElementById(id);
 let MODULOS = [];
 let CFG = {};
-const APP_VER = 'r31';
+const APP_VER = 'r32';
 let globalUser = null;
 let globalIsAdmin = false;
 
@@ -80,13 +80,65 @@ function initGlobalAuth(){
     if(user && !user.isAnonymous){
       globalIsAdmin = true;
       $('shell-admin').style.display = '';
+      $('btnGlobalLogin').textContent = '👤 '+(user.email || 'Tesorero')+' · Salir';
     } else {
       globalIsAdmin = false;
-      $('shell-admin').style.display = 'none';
+      $('shell-admin').style.display = '';
+      $('btnGlobalLogin').textContent = '🔑 Tesorero';
     }
     // Notificar a todos los módulos
     document.dispatchEvent(new CustomEvent('promuf:authChanged', {detail: {user, isAdmin: globalIsAdmin}}));
   });
+}
+
+/* ── Login global del Tesorero (modal en el shell) ── */
+function clickGlobalTesoro(){
+  if(globalUser && !globalUser.isAnonymous){
+    firebase.auth().signOut()
+      .then(()=>toast('Sesión cerrada','i'))
+      .catch(e=>console.error('[Logout]',e));
+  } else {
+    openLogin();
+  }
+}
+function openLogin(){
+  if($('loginError')) $('loginError').textContent='';
+  if($('loginPass')) $('loginPass').value='';
+  $('moLogin').classList.add('on');
+  if($('loginEmail')) setTimeout(()=>$('loginEmail').focus(), 50);
+}
+function closeLogin(){ $('moLogin').classList.remove('on'); }
+
+async function doLogin(){
+  const email = $('loginEmail').value.trim();
+  const pass = $('loginPass').value;
+  $('loginError').textContent='';
+  if(!email || !pass){ $('loginError').textContent='Indica correo y contraseña.'; return; }
+  if(!(firebase.apps && firebase.apps.length)){
+    if(CFG.firebase && CFG.firebase.projectId) firebase.initializeApp(CFG.firebase);
+  }
+  const btn = $('btnLoginSubmit');
+  btn.disabled = true; btn.textContent='Entrando…';
+  try{
+    await firebase.auth().signInWithEmailAndPassword(email, pass);
+    // onAuthStateChanged cierra/limpia la UI del shell y notifica a los módulos
+    closeLogin();
+    toast('Sesión iniciada como '+(email || 'Tesorero'),'s');
+  }catch(e){
+    const msg = {
+      'auth/invalid-email': 'Correo inválido.',
+      'auth/user-disabled': 'Esta cuenta está deshabilitada.',
+      'auth/user-not-found': 'No existe una cuenta con ese correo.',
+      'auth/wrong-password': 'Contraseña incorrecta.',
+      'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+      'auth/too-many-requests': 'Demasiados intentos. Espera un momento y vuelve a intentar.',
+      'auth/network-request-failed': 'Sin conexión a Firebase. Revisa tu internet.'
+    }[e.code] || 'Error al iniciar sesión.';
+    $('loginError').textContent = msg;
+    console.error('[Login]', e);
+  }finally{
+    btn.disabled = false; btn.textContent='Entrar';
+  }
 }
 
 function pintarNav(){
@@ -232,20 +284,9 @@ window.addEventListener('hashchange', ruteo);
   pintarNav();
   ruteo();
   chequeoVersion();
-  // Manejar ?priv=1 a nivel global
+  // ?priv=1 ahora abre el login modal del Tesorero
   const sp = new URLSearchParams(location.search);
   if(sp.get('priv') === '1'){
-    // Auto-inicializar auth y mostrar estado admin
-    if(typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length){
-      firebase.auth().onAuthStateChanged(user=>{
-        if(user && !user.isAnonymous){
-          globalIsAdmin = true;
-          $('shell-admin').style.display = '';
-        } else {
-          globalIsAdmin = false;
-          $('shell-admin').style.display = 'none';
-        }
-      });
-    }
+    setTimeout(openLogin, 300);
   }
 })();

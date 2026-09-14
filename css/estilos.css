@@ -253,3 +253,15 @@ html,body{overflow-x:hidden}
   .shell-ft{padding:22px 14px 30px;font-size:.68rem}
   .shell-ft .ft-brand{font-size:.85rem}
 }
+
+/* ── MODAL LOGIN TESORERO (shell global) ── */
+.mo{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);justify-content:center;align-items:center;padding:14px}
+.mo.on{display:flex}
+.ml2{background:var(--panel);border:1px solid var(--panel-brd);border-radius:14px;width:100%;max-width:380px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4);padding:20px}
+.ml2 h2{font-size:1rem;margin-bottom:14px}
+.mx{background:none;border:none;color:var(--tx2);font-size:1.3rem;cursor:pointer;float:right;padding:2px}
+.mx:hover{color:var(--tx)}
+.fg2{margin-bottom:12px}
+.fg2 label{display:block;font-size:.7rem;color:var(--tx2);margin-bottom:4px;font-weight:600}
+.fg2 .in{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--panel-brd);background:rgba(0,0,0,.25);color:var(--tx);font-size:.9rem;box-sizing:border-box}
+.fg2 .in:focus{outline:2px solid var(--ambar2);outline-offset:1px;border-color:transparent}
