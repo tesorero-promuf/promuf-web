@@ -9,6 +9,8 @@ const $ = id => document.getElementById(id);
 let MODULOS = [];
 let CFG = {};
 const APP_VER = 'r30';
+let globalUser = null;
+let globalIsAdmin = false;
 
 const AVISO_TIPOS = {
   aviso:      { ico: '📢', clase: 'b-teal' },
@@ -43,9 +45,29 @@ async function cargarDatos(){
     if(m.ok) MODULOS = (await m.json()).modulos || [];
     if(c.ok) CFG = await c.json();
     $('dot').className = 'dot dot-on'; $('stxt').textContent = 'En línea';
+    // Inicializar auth global después de cargar datos
+    initGlobalAuth();
   }catch(e){
     $('dot').className = 'dot dot-off'; $('stxt').textContent = 'Sin conexión';
   }
+}
+
+function initGlobalAuth(){
+  if(window.promufGlobalAuthInit) return;
+  window.promufGlobalAuthInit = true;
+  if(!(firebase.apps && firebase.apps.length)) return;
+  firebase.auth().onAuthStateChanged(user=>{
+    globalUser = user;
+    if(user && !user.isAnonymous){
+      globalIsAdmin = true;
+      $('shell-admin').style.display = '';
+    } else {
+      globalIsAdmin = false;
+      $('shell-admin').style.display = 'none';
+    }
+    // Notificar a todos los módulos
+    document.dispatchEvent(new CustomEvent('promuf:authChanged', {detail: {user, isAdmin: globalIsAdmin}}));
+  });
 }
 
 function pintarNav(){
@@ -184,11 +206,27 @@ async function chequeoVersion(){
     }
   }catch(e){}
 }
-/* ── Arranque ── */
+/* ── Arranque global ── */
 window.addEventListener('hashchange', ruteo);
 (async function(){
   await cargarDatos();
   pintarNav();
   ruteo();
   chequeoVersion();
+  // Manejar ?priv=1 a nivel global
+  const sp = new URLSearchParams(location.search);
+  if(sp.get('priv') === '1'){
+    // Auto-inicializar auth y mostrar estado admin
+    if(firebase.apps && firebase.apps.length){
+      firebase.auth().onAuthStateChanged(user=>{
+        if(user && !user.isAnonymous){
+          globalIsAdmin = true;
+          $('shell-admin').style.display = '';
+        } else {
+          globalIsAdmin = false;
+          $('shell-admin').style.display = 'none';
+        }
+      });
+    }
+  }
 })();
