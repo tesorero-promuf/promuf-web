@@ -301,6 +301,7 @@ select.g-in option{background:var(--navy3);color:#fff;}
   <div class="tb-admin" id="tbAdmin">
     <span class="tsess" id="sesionInfo" style="display:none"></span>
     <button class="tpill" id="btnGestion" onclick="showGestion()" style="display:none">Gesti&oacute;n de socios</button>
+    <button class="tlink" id="btnLogoutLink" onclick="doLogout()" style="display:none">Cerrar sesión</button>
   </div>
 </div>
 
@@ -366,25 +367,26 @@ function attachAuthListener(){
   if(authListenerAttached) return;
   if(!(firebase.apps && firebase.apps.length)) return;
   authListenerAttached = true;
+  const esVerificacionPublica = new URLSearchParams(location.search).get('verificar');
   firebase.auth().onAuthStateChanged(async user=>{
     if(!user){
       try{ await firebase.auth().signInAnonymously(); }
       catch(e){ console.error('[Auth] anon falló', e); }
       return;
     }
-currentUser = user;
-    if(user.isAnonymous){
-      // Global auth handled from shell header - btnLoginLink removed
-      $('sesionInfo').style.display='none';
-      $('btnGestion').style.display='none';
-      $('btnLogoutLink').style.display='none';
-    } else {
-      // Global auth handled from shell header
-      $('sesionInfo').textContent = user.email||'Tesorero';
+    currentUser = user;
+    const isAdmin = !user.isAnonymous && !esVerificacionPublica;
+    if(isAdmin){
+      $('sesionInfo').style.display='';
+      $('sesionInfo').textContent = '👤 '+(user.email||'Tesorero');
       $('btnGestion').style.display='';
       $('btnLogoutLink').style.display='';
       closeLogin();
       toast('Sesión iniciada como '+(user.email||'Tesorero'),'s');
+    } else {
+      $('sesionInfo').style.display='none';
+      $('btnGestion').style.display='none';
+      $('btnLogoutLink').style.display='none';
     }
   }, err=>console.error('[Auth]', err));
 }
@@ -708,6 +710,7 @@ async function cargarListaSocios(){
   const params = new URLSearchParams(location.search);
   const verificar = params.get('verificar');
   if(verificar){
+    const tb = $('tbAdmin'); if(tb) tb.style.display='none';
     await new Promise(r=>{ const iv=setInterval(()=>{ if(db){clearInterval(iv);r();} },100); setTimeout(r,4000); });
     mostrarVerificacion(normCedula(verificar));
   } else {
