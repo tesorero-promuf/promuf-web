@@ -299,10 +299,8 @@ select.g-in option{background:var(--navy3);color:#fff;}
     <span class="sub">PROFESIONALES DE LA M&Uacute;SICA DE FALC&Oacute;N</span>
   </div>
   <div class="tb-admin" id="tbAdmin">
-    <button class="tlink" id="btnLoginLink" onclick="openLogin()">Acceso Tesorero</button>
     <span class="tsess" id="sesionInfo" style="display:none"></span>
     <button class="tpill" id="btnGestion" onclick="showGestion()" style="display:none">Gesti&oacute;n de socios</button>
-    <button class="tlink" id="btnLogoutLink" onclick="doLogout()" style="display:none">Salir</button>
   </div>
 </div>
 
@@ -374,15 +372,14 @@ function attachAuthListener(){
       catch(e){ console.error('[Auth] anon falló', e); }
       return;
     }
-    currentUser = user;
+currentUser = user;
     if(user.isAnonymous){
-      $('btnLoginLink').style.display='';
+      // Global auth handled from shell header - btnLoginLink removed
       $('sesionInfo').style.display='none';
       $('btnGestion').style.display='none';
       $('btnLogoutLink').style.display='none';
     } else {
-      $('btnLoginLink').style.display='none';
-      $('sesionInfo').style.display='';
+      // Global auth handled from shell header
       $('sesionInfo').textContent = user.email||'Tesorero';
       $('btnGestion').style.display='';
       $('btnLogoutLink').style.display='';
