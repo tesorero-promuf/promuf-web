@@ -100,6 +100,7 @@
   <div class="br"><span class="pro">PRO</span><span class="muf">MUF</span></div>
   <div class="hd-r">
     <span class="note no-pub" id="sesionInfo" style="margin:0"></span>
+    <button class="btn bo no-pub" id="btnLogout" onclick="doLogout()" style="display:none">🚪 Cerrar sesión</button>
   </div>
 </div>
 
@@ -310,19 +311,18 @@ function attachAuthListener(){
     }
     currentUser = user;
     authReadyResolve(user);
-    if(user.isAnonymous){
-      document.body.classList.add('pub-mode');
-      $('btnLogin').style.display='';
-      $('btnLogout').style.display='none';
-      $('sesionInfo').textContent='';
-    } else {
+    const isAdmin = !user.isAnonymous;
+    if(isAdmin){
       document.body.classList.remove('pub-mode');
-      $('btnLogin').style.display='none';
       $('btnLogout').style.display='';
       $('sesionInfo').textContent = '👤 '+(user.email||'Tesorero');
       closeLogin();
       toast('Sesión iniciada como '+(user.email||'Tesorero'),'s');
       cargarPanel();
+    } else {
+      document.body.classList.add('pub-mode');
+      if($('btnLogout')) $('btnLogout').style.display='none';
+      $('sesionInfo').textContent='';
     }
   }, err=>console.error('[Auth] onAuthStateChanged error', err));
 }
