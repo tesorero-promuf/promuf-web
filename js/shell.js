@@ -8,7 +8,7 @@
 const $ = id => document.getElementById(id);
 let MODULOS = [];
 let CFG = {};
-const APP_VER = 'r30';
+const APP_VER = 'r31';
 let globalUser = null;
 let globalIsAdmin = false;
 
@@ -62,9 +62,16 @@ async function cargarDatos(){
 function initGlobalAuth(){
   if(window.promufGlobalAuthInit) return;
   window.promufGlobalAuthInit = true;
-  if(!(firebase.apps && firebase.apps.length)){
-    $('dot').className = 'dot dot-off'; $('stxt').textContent = 'Sin Firebase';
+  if(typeof firebase === 'undefined'){
+    $('dot').className = 'dot dot-off'; $('stxt').textContent = 'SDK Firebase no cargado';
     return;
+  }
+  if(!firebase.apps || !firebase.apps.length){
+    if(!CFG.firebase || !CFG.firebase.projectId){
+      $('dot').className = 'dot dot-off'; $('stxt').textContent = 'Sin configurar Firebase en config.json';
+      return;
+    }
+    firebase.initializeApp(CFG.firebase);
   }
   // Firebase configurado - actualizar estado inicial
   $('dot').className = 'dot dot-on'; $('stxt').textContent = 'En línea';
@@ -229,7 +236,7 @@ window.addEventListener('hashchange', ruteo);
   const sp = new URLSearchParams(location.search);
   if(sp.get('priv') === '1'){
     // Auto-inicializar auth y mostrar estado admin
-    if(firebase.apps && firebase.apps.length){
+    if(typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length){
       firebase.auth().onAuthStateChanged(user=>{
         if(user && !user.isAnonymous){
           globalIsAdmin = true;
