@@ -44,17 +44,17 @@ async function cargarDatos(){
     const [m, c] = await Promise.all([fetch('modulos.json'), fetch('config.json')]);
     if(m.ok) MODULOS = (await m.json()).modulos || [];
     if(c.ok) CFG = await c.json();
-    // Mostrar estado de conexión mientras Firebase se inicializa
-    $('dot').className = 'dot dot-wait'; $('stxt').textContent = 'Conectando…';
-    // Verificar configuración e inicializar auth
+    // Mostrar estado de conexión basado en configuración Firebase
     const hasFirebase = CFG.firebase && CFG.firebase.projectId;
     if(hasFirebase){
+      $('dot').className = 'dot dot-wait'; $('stxt').textContent = 'Conectando con Firebase...';
+      // Intentar inicializar auth global
       initGlobalAuth();
     } else {
-      $('dot').className = 'dot dot-off'; $('stxt').textContent = 'Sin configurar Firebase';
+      $('dot').className = 'dot dot-off'; $('stxt').textContent = 'Sin configurar Firebase en config.json';
     }
   }catch(e){
-    $('dot').className = 'dot dot-off'; $('stxt').textContent = 'Error al cargar';
+    $('dot').className = 'dot dot-off'; $('stxt').textContent = 'Error al cargar datos';
     console.error('[cargarDatos]', e);
   }
 }
