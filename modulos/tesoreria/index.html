@@ -437,32 +437,20 @@ let LOAD_STATUS = '';
    del Tesorero (ver attachAuthListener). ?priv=1 solo abre el diálogo
    de inicio de sesión como atajo de conveniencia. */
 function readQuery(){
+  document.body.classList.add('pub-mode');
   try{
     const p=new URLSearchParams(location.search);
-    if(p.get('priv')==='1'){
-      // Modo Tesorero: quitar modo público y activar configuración admin
-      document.body.classList.remove('pub-mode');
-      toast('Modo Tesorero activado','s');
-    }
-    const c={};
-    if(p.get('mov')) c.mov=p.get('mov');
-    if(p.get('fondos')) c.fondos=p.get('fondos');
-    if(p.get('conc')) c.conc=p.get('conc');
-    if(Object.keys(c).length){ cfg={...cfg,...c}; }
+    if(p.get('priv')==='1'){ setTimeout(openLogin, 300); }
   }catch(e){}
 }
 
 /* ═══════════════ AUTENTICACIÓN (TESORERO) ═══════════════ */
 let authListenerAttached = false;
 function openLogin(){
-  // Modo simplificado: toggleear panel de config
-  // Ya no depende de Firebase auth complejo
-  document.body.classList.toggle('pub-mode');
-  if(document.body.classList.contains('pub-mode')){
-    toast('Saliendo modo Tesorero','i');
-  } else {
-    toast('Modo Tesorero activado','s');
-  }
+  $('loginError').textContent='';
+  $('loginPass').value='';
+  $('moLogin').classList.add('on');
+  $('loginEmail').focus();
 }
 function closeLogin(){ $('moLogin').classList.remove('on'); }
 
