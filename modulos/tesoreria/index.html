@@ -460,11 +460,12 @@ function attachAuthListener(){
   if(!(firebase.apps && firebase.apps.length)) return; // esperar a initFirebase()
   authListenerAttached = true;
   firebase.auth().onAuthStateChanged(user=>{
-    if(user){
+    const isAdmin = !!(user && !user.isAnonymous);
+    if(isAdmin){
       document.body.classList.remove('pub-mode');
       $('btnLogin').style.display='none';
       $('btnLogout').style.display='';
-      $('sesionInfo').textContent = '👤 '+(user.email||'sesión activa');
+      $('sesionInfo').textContent = '👤 '+(user.email||'Tesorero');
       closeLogin();
       toast('Sesión iniciada como '+(user.email||'Tesorero'),'s');
     } else {
@@ -472,6 +473,7 @@ function attachAuthListener(){
       $('btnLogin').style.display='';
       $('btnLogout').style.display='none';
       $('sesionInfo').textContent='';
+      if(user && user.isAnonymous) firebase.auth().signOut().catch(()=>{});
     }
     go(document.querySelector('.tab.on')?.dataset.t || 'resumen');
     renderAll();
