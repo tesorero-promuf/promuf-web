@@ -378,6 +378,7 @@ function loadPersistedMovs(){
   }
 }
 try { cfg = JSON.parse(lsGet('promuf_cfg')||'{}'); } catch(e) { cfg={}; }
+function effCfg(){ return cfg; }
 
 const FONDOS = [
   {id:'F1', key:'Membresia',  nombre:'Fondo Cuotas de Membresía',    color:'f1', icon:'🎟',
@@ -1032,7 +1033,7 @@ async function loadConfigJson(){
         firebase: j.firebase||null,
         live: j.live===true
       };
-      cfg = {...cfgRemote, ...cfg};
+      cfg = {...cfg, ...cfgRemote};
       lsSet('promuf_cfg', JSON.stringify(cfg));
     }
   }catch(e){ cfgRemote = null; }
