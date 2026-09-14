@@ -8,7 +8,7 @@
 const $ = id => document.getElementById(id);
 let MODULOS = [];
 let CFG = {};
-const APP_VER = 'r32';
+const APP_VER = 'r33';
 let globalUser = null;
 let globalIsAdmin = false;
 
