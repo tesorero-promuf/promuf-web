@@ -123,4 +123,12 @@ No hace falta activar nada nuevo en Firebase: usa la misma autenticación anóni
 4. **Publicar las reglas** — *Firestore Database* → *Rules* → pega el contenido de `firestore.rules` de este repo → *Publish*. Debe hacerse **antes del 4 de octubre de 2026**, fecha en la que expiran las reglas de prueba actuales y Firestore empezará a rechazar todas las peticiones (lectura incluida).
 5. En el sitio, entra a `#/tesoreria` y usa el botón **🔑 Iniciar sesión (Tesorero)** con ese correo y contraseña.
 
+**¿El correo de reset expiró o se marcó como ya usado?** El enlace de restablecimiento de Firebase es de un solo uso y caduca rápido. Para fijar la contraseña al instante (sin depender del correo) usa el script `scripts/set_password.mjs` con el Service Account:
+
+```
+node scripts/set_password.mjs tesorero@promuf.org TuNuevaContrasena
+```
+
+Da permiso al correo que ya existe en Firebase Auth (no crea cuentas nuevas). Requiere `serviceAccountKey.json` en la raíz (igual que `scripts/sync_data.mjs`).
+
 Si alguien inicia sesión con una cuenta que no está en `admins`, la sesión es válida pero Firestore rechazará cualquier escritura (permission-denied): la protección real vive en las reglas, no en la interfaz.
